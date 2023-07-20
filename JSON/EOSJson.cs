@@ -6,7 +6,7 @@ using GTFO.API.JSON.Converters;
 
 namespace ExtraObjectiveSetup.JSON
 {
-    internal static class Json
+    public static class EOSJson
     {
         private static readonly JsonSerializerOptions _setting = new()
         {
@@ -19,7 +19,7 @@ namespace ExtraObjectiveSetup.JSON
         };
 
 
-        static Json()
+        static EOSJson()
         {
             _setting.Converters.Add(new JsonStringEnumConverter());
             if(MTFOPartialDataUtil.IsLoaded)

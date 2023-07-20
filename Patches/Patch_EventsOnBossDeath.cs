@@ -13,7 +13,7 @@ namespace ExtraObjectiveSetup.Patches
     [HarmonyPatch]
     internal class Patch_EventsOnBossDeath
     {
-        private static HashSet<ushort> ExecutedForInstances = new();
+        private static HashSet<ushort> ExecutedForInstances = new(); 
 
         // called on both host and client side
         [HarmonyPostfix]
@@ -36,20 +36,32 @@ namespace ExtraObjectiveSetup.Patches
 
             if (!def.BossIDs.Contains(enemy.EnemyData.persistentID)) return;
 
-            if (spawnData.mode != Agents.AgentMode.Hibernate) return;
+            // TODO: test 
+            if (!(spawnData.mode == Agents.AgentMode.Hibernate && def.ApplyToHibernate || spawnData.mode == Agents.AgentMode.Agressive && def.ApplyToWave)) return;
+
+            var mode = spawnData.mode == Agents.AgentMode.Hibernate ? BossDeathEventManager.Mode.HIBERNATE : BossDeathEventManager.Mode.WAVE;
+            BossDeathEventManager.Current.RegisterInLevelBDEventsExecution(def, mode);
+
+            if(!BossDeathEventManager.Current.TryConsumeBDEventsExecutionTimes(def, mode))
+            {
+                EOSLogger.Debug($"EventsOnBossDeath: execution times depleted for {def.GlobalZoneIndexTuple()}, {mode}");
+                return;
+            }
 
             enemy.add_OnDeadCallback(new System.Action(() =>
             {
                 ushort enemyID = enemy.GlobalID;
-                if (ExecutedForInstances.Contains(enemyID)) return;
-
-                def.EventsOnBossDeath.ForEach(e =>
+                if (ExecutedForInstances.Contains(enemyID))
                 {
-                    WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true);
-                });
+                    ExecutedForInstances.Remove(enemyID);
+                    return;
+                }
 
+                def.EventsOnBossDeath.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
                 ExecutedForInstances.Add(enemyID);
             }));
+
+            EOSLogger.Debug($"EventsOnBossDeath: added for enemy with id  {enemy.EnemyData.persistentID}, mode: {spawnData.mode}");
         }
 
         static Patch_EventsOnBossDeath()

@@ -66,7 +66,7 @@ namespace ExtraObjectiveSetup.Objectives.Reactor.Shutdown
 
         private void Build(ReactorShutdownDefinition def)
         {
-            return; // untested, so no release for now
+            //return; // untested, so no release for now
 
             var reactor = ReactorInstanceManager.Current.GetInstance(def.GlobalZoneIndexTuple(), def.InstanceIndex);
             if (reactor == null)
@@ -220,7 +220,8 @@ namespace ExtraObjectiveSetup.Objectives.Reactor.Shutdown
 
         private ReactorShutdownObjectiveManager() : base() 
         {
-            LevelAPI.OnBuildDone += OnBuildDone;
+            //LevelAPI.OnBuildDone += OnBuildDone;
+            BatchBuildManager.Current.Add_OnBeforeFactoryDone(OnBuildDone);
             LevelAPI.OnLevelCleanup += OnLevelCleanup;
         }
 

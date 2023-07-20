@@ -39,7 +39,6 @@
 
   <!-- soft dependency -->
   <ItemGroup>
-    <Reference Include="$(PluginsFolder)/Hikaria.MapperTracker.dll" Private="false" />
   </ItemGroup>
 
 </Project>

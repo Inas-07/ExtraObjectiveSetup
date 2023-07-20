@@ -85,7 +85,7 @@ namespace ExtraObjectiveSetup.BaseClasses
             EOSLogger.Warning($"LiveEdit File Changed: {e.FullPath}");
             LiveEdit.TryReadFileContent(e.FullPath, (content) =>
             {
-                InstanceDefinitionsForLevel<T> conf = Json.Deserialize<InstanceDefinitionsForLevel<T>>(content);
+                InstanceDefinitionsForLevel<T> conf = EOSJson.Deserialize<InstanceDefinitionsForLevel<T>>(content);
                 AddDefinitions(conf);
             });
         }
@@ -127,7 +127,7 @@ namespace ExtraObjectiveSetup.BaseClasses
             {
                 Directory.CreateDirectory(DEFINITION_PATH);
                 var file = File.CreateText(Path.Combine(DEFINITION_PATH, "Template.json"));
-                file.WriteLine(Json.Serialize(new InstanceDefinitionsForLevel<T>()));
+                file.WriteLine(EOSJson.Serialize(new InstanceDefinitionsForLevel<T>()));
                 file.Flush();
                 file.Close();
             }
@@ -135,7 +135,7 @@ namespace ExtraObjectiveSetup.BaseClasses
             foreach (string confFile in Directory.EnumerateFiles(DEFINITION_PATH, "*.json", SearchOption.AllDirectories))
             {
                 string content = File.ReadAllText(confFile);
-                InstanceDefinitionsForLevel<T> conf = Json.Deserialize<InstanceDefinitionsForLevel<T>>(content);
+                InstanceDefinitionsForLevel<T> conf = EOSJson.Deserialize<InstanceDefinitionsForLevel<T>>(content);
 
                 AddDefinitions(conf);
             }

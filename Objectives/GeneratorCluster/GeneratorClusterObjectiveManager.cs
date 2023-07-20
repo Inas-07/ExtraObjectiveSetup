@@ -56,7 +56,8 @@ namespace ExtraObjectiveSetup.Objectives.GeneratorCluster
 
         private GeneratorClusterObjectiveManager() : base()
         {
-            LevelAPI.OnBuildDone += OnBuildDone;
+            //LevelAPI.OnBuildDone += OnBuildDone;
+            BatchBuildManager.Current.Add_OnBeforeFactoryDone(OnBuildDone);
         }
 
         static GeneratorClusterObjectiveManager()

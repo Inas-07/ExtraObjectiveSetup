@@ -91,7 +91,8 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 
         private HSUActivatorObjectiveManager() : base()
         {
-            LevelAPI.OnBuildDone += OnBuildDone;
+            //LevelAPI.OnBuildDone += OnBuildDone;
+            BatchBuildManager.Current.Add_OnBeforeFactoryDone(OnBuildDone);
             LevelAPI.OnLevelCleanup += OnLevelCleanup;
         }
     }

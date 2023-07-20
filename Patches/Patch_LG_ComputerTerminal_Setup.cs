@@ -3,7 +3,6 @@ using LevelGeneration;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.Tweaks.TerminalPosition;
 using ExtraObjectiveSetup.Utils;
-using ExtraObjectiveSetup.BaseClasses;
 
 namespace ExtraObjectiveSetup.Patches
 {
@@ -21,8 +20,8 @@ namespace ExtraObjectiveSetup.Patches
 
             var globalZoneIndex = TerminalInstanceManager.Current.GetGlobalZoneIndex(__instance);
             var _override = TerminalPositionOverrideManager.Current.GetDefinition(globalZoneIndex, instanceIndex);
-            
-            if(_override == null ) return;
+
+            if (_override == null) return;
 
             if (_override.Position.ToVector3() != UnityEngine.Vector3.zeroVector)
             {

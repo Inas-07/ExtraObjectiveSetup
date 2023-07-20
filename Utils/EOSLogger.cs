@@ -2,7 +2,7 @@
 
 namespace ExtraObjectiveSetup.Utils
 {
-    internal static class EOSLogger
+    public static class EOSLogger
     {
         private static ManualLogSource logger = BepInEx.Logging.Logger.CreateLogSource("ExtraObjectiveSetup");
 
