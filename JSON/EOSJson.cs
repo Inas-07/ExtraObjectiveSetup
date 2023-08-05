@@ -34,10 +34,10 @@ namespace ExtraObjectiveSetup.JSON
                 _setting.Converters.Add(new LocalizedTextConverter());
             }
 
-            if(AWOUtil.IsLoaded)
+            if(InjectLibUtil.IsLoaded)
             {
-                _setting.Converters.Add(AWOUtil.AWOEventDataConverter);
-                EOSLogger.Log("AWO support found!");
+                _setting.Converters.Add(InjectLibUtil.InjectLibConnector);
+                EOSLogger.Log("InjectLib (AWO) support found!");
             }
         }
 

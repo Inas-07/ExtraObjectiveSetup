@@ -14,7 +14,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 {
     internal sealed class UplinkObjectiveManager: InstanceDefinitionManager<UplinkDefinition>
     {
-        public static readonly UplinkObjectiveManager Current = new();
+        public static UplinkObjectiveManager Current { get; private set; } = new();
 
         private TextDataBlock UplinkAddrLogContentBlock = null;
 
@@ -230,9 +230,10 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 
         private UplinkObjectiveManager() : base() 
         {
-            //LevelAPI.OnBuildDone += OnBuildDone;
-            BatchBuildManager.Current.Add_OnBeforeFactoryDone(OnBuildDone);
+            //BatchBuildManager.Current.Add_OnBatchDone(LG_Factory.BatchName.FinalLogicLinking, OnBuildDone);
+            LevelAPI.OnBuildDone += OnBuildDone;
             LevelAPI.OnLevelCleanup += OnLevelCleanup;
+            LevelAPI.OnBuildStart += OnLevelCleanup;
         }
     }
 }

@@ -10,8 +10,6 @@ namespace ExtraObjectiveSetup
 
         private Dictionary<LG_Factory.BatchName, Action> OnBatchDone = new();
 
-        public Action OnBeforeFactoryDone { get; set; } = null;
-
         public void Init()
         {
             if (OnBatchDone.Count > 0) return;
@@ -36,22 +34,6 @@ namespace ExtraObjectiveSetup
         {
             return OnBatchDone[batchName];
         }
-
-        public void Add_OnBeforeFactoryDone(Action action)
-        {
-            OnBeforeFactoryDone += action;
-        }
-
-        public void Remove_OnBeforeFactoryDone(Action action)
-        {
-            OnBeforeFactoryDone -= action;
-        }
-
-        public Action Get_OnBeforeFactoryDone()
-        {
-            return OnBeforeFactoryDone;
-        }
-
 
         private BatchBuildManager() {}
 

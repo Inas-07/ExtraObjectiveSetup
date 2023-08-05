@@ -10,7 +10,7 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 {
     internal sealed class HSUActivatorObjectiveManager : InstanceDefinitionManager<HSUActivatorDefinition>
     {
-        public static readonly HSUActivatorObjectiveManager Current = new();
+        public static HSUActivatorObjectiveManager Current { get; private set; } = new();
 
         protected override string DEFINITION_NAME { get; } = "ActivateSmallHSU";
 
@@ -82,7 +82,7 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
         private void OnLevelCleanup()
         {
             if (!definitions.ContainsKey(RundownManager.ActiveExpedition.LevelLayoutData)) return;
-            definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(def => def.ChainedPuzzleOnActivationInstance = null);
+            definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(def => { def.ChainedPuzzleOnActivationInstance = null; });
         }
 
         static HSUActivatorObjectiveManager()
@@ -91,9 +91,9 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 
         private HSUActivatorObjectiveManager() : base()
         {
-            //LevelAPI.OnBuildDone += OnBuildDone;
-            BatchBuildManager.Current.Add_OnBeforeFactoryDone(OnBuildDone);
+            LevelAPI.OnBuildDone += OnBuildDone;
             LevelAPI.OnLevelCleanup += OnLevelCleanup;
+            LevelAPI.OnBuildStart += OnLevelCleanup;
         }
     }
 }

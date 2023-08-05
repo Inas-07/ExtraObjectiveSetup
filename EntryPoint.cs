@@ -2,20 +2,23 @@
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using ExtraObjectiveSetup.JSON;
+using ExtraObjectiveSetup.Expedition;
+using ExtraObjectiveSetup.Expedition.Gears;
+using ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup;
 
 namespace ExtraObjectiveSetup
 {
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOPartialDataUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(AWOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(InjectLibUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(AUTHOR + "." + PLUGIN_NAME, PLUGIN_NAME, VERSION)]
     
     public class EntryPoint: BasePlugin
     {
         public const string AUTHOR = "Inas";
         public const string PLUGIN_NAME = "ExtraObjectiveSetup";
-        public const string VERSION = "1.3.0";
+        public const string VERSION = "1.3.1";
 
         private Harmony m_Harmony;
         
@@ -38,11 +41,19 @@ namespace ExtraObjectiveSetup
             Objectives.GeneratorCluster.GeneratorClusterObjectiveManager.Current.Init();
             Objectives.ActivateSmallHSU.HSUActivatorObjectiveManager.Current.Init();
             Objectives.TerminalUplink.UplinkObjectiveManager.Current.Init();
-            Objectives.Reactor.Shutdown.ReactorShutdownObjectiveManager.Current.Init();
 
             Tweaks.TerminalPosition.TerminalPositionOverrideManager.Current.Init();
             Tweaks.Scout.ScoutScreamEventManager.Current.Init();
             Tweaks.BossEvents.BossDeathEventManager.Current.Init();
+
+            ExpeditionDefinitionManager.Current.Init();
+            ExpeditionGearManager.Current.Init();
+            ExpeditionIGGroupManager.Current.Init();
+
+            Instances.GeneratorClusterInstanceManager.Current.Init();
+            Instances.HSUActivatorInstanceManager.Current.Init();
+            Instances.PowerGeneratorInstanceManager.Current.Init();
+            Instances.TerminalInstanceManager.Current.Init();
         }
     }
 }

@@ -1,21 +1,20 @@
-﻿using BepInEx.Unity.IL2CPP;
-using ExtraObjectiveSetup.Utils;
-using GTFO.API.JSON.Converters;
-using System;
+﻿using System;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json.Serialization;
+using BepInEx.Unity.IL2CPP;
+using ExtraObjectiveSetup.Utils;
 
 namespace ExtraObjectiveSetup.JSON
 {
-    public static class AWOUtil
+    public static class InjectLibUtil
     {
-        public const string PLUGIN_GUID = "GTFO.AWO";
+        public const string PLUGIN_GUID = "GTFO.InjectLib";
 
-        public static JsonConverter AWOEventDataConverter { get; private set; } = null;
+        public static JsonConverter InjectLibConnector { get; private set; } = null;
+
         public static bool IsLoaded { get; private set; } = false;
 
-        static AWOUtil()
+        static InjectLibUtil()
         {
             if (IL2CPPChainloader.Instance.Plugins.TryGetValue(PLUGIN_GUID, out var info))
             {
@@ -27,16 +26,11 @@ namespace ExtraObjectiveSetup.JSON
                         throw new Exception("Assembly is Missing!");
 
                     var types = ddAsm.GetTypes();
-                    var converterType = types.First(t => t.Name == "JsonAPI");
+                    var converterType = types.First(t => t.Name == "InjectLibConnector");
                     if (converterType is null)
-                        throw new Exception("Unable to Find JsonAPI Class");
+                        throw new Exception("Unable to Find InjectLibConnector Class");
 
-                    var converterProp = converterType.GetProperty("EventDataConverter", BindingFlags.Public | BindingFlags.Static);
-
-                    if (converterProp is null)
-                        throw new Exception("Unable to Find Property: EventDataConverter");
-
-                    AWOEventDataConverter = (JsonConverter)converterProp.GetValue(info);
+                    InjectLibConnector = (JsonConverter)Activator.CreateInstance(converterType);
                     IsLoaded = true;
                 }
                 catch (Exception e)

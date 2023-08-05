@@ -11,7 +11,7 @@ namespace ExtraObjectiveSetup.Instances
 {
     public sealed class PowerGeneratorInstanceManager: InstanceManager<LG_PowerGenerator_Core>
     {
-        public static readonly PowerGeneratorInstanceManager Current = new();
+        public static PowerGeneratorInstanceManager Current { get; private set; } = new();
 
         private HashSet<IntPtr> gcGenerators = new();
 

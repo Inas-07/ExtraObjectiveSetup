@@ -9,7 +9,7 @@ namespace ExtraObjectiveSetup.Objectives.GeneratorCluster
 {
     internal sealed class GeneratorClusterObjectiveManager : InstanceDefinitionManager<GeneratorClusterDefinition>
     {
-        public static readonly GeneratorClusterObjectiveManager Current = new();
+        public static GeneratorClusterObjectiveManager Current { get; private set; } = new();
 
         protected override string DEFINITION_NAME { get; } = "GeneratorCluster";
 
@@ -54,10 +54,16 @@ namespace ExtraObjectiveSetup.Objectives.GeneratorCluster
             BuildChainedPuzzleMidObjective();
         }
 
+        private void OnLevelCleanup()
+        {
+            chainedPuzzleToBuild.Clear();
+        }
+
         private GeneratorClusterObjectiveManager() : base()
         {
-            //LevelAPI.OnBuildDone += OnBuildDone;
-            BatchBuildManager.Current.Add_OnBeforeFactoryDone(OnBuildDone);
+            LevelAPI.OnBuildDone += OnBuildDone;
+            LevelAPI.OnLevelCleanup += OnLevelCleanup;
+            LevelAPI.OnBuildStart += OnLevelCleanup;
         }
 
         static GeneratorClusterObjectiveManager()

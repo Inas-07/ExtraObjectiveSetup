@@ -17,12 +17,12 @@ namespace ExtraObjectiveSetup.Patches.LGFactory
 
             var lastBatchName = __instance.m_batches[lastBatchStep].m_batchName;
             Action onBatchDone = BatchBuildManager.Current.Get_OnBatchDone(lastBatchName); 
-            onBatchDone?.Invoke();
 
             if(onBatchDone != null)
             {
-                EOSLogger.Warning($"{lastBatchName}_OnBatchDone");
-            } 
+                EOSLogger.Warning($"On Batch '{lastBatchName}' Done: {onBatchDone.GetInvocationList().Length} injected jobs");
+                onBatchDone();
+            }
         }
     }
 }

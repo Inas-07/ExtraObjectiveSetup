@@ -11,8 +11,6 @@ namespace ExtraObjectiveSetup.BaseClasses
         protected Dictionary<(eDimensionIndex, LG_LayerType, eLocalZoneIndex), Dictionary<System.IntPtr, uint>> instances2Index = new();
         protected Dictionary<(eDimensionIndex, LG_LayerType, eLocalZoneIndex), List<T>> index2Instance = new();
 
-        protected HashSet<(eDimensionIndex, LG_LayerType, eLocalZoneIndex, uint)> builtInstances = new();
-
         public const uint INVALID_INSTANCE_INDEX = uint.MaxValue;
 
         /// <summary>
@@ -90,7 +88,7 @@ namespace ExtraObjectiveSetup.BaseClasses
 
             var zoneInstanceIndices = index2Instance[globalZoneIndex];
 
-            return instanceIndex < zoneInstanceIndices.Count ? zoneInstanceIndices[(int)instanceIndex] : default;
+            return instanceIndex < zoneInstanceIndices.Count ? zoneInstanceIndices[(int)instanceIndex] : null;
         }
 
         public T GetInstance(eDimensionIndex dimensionIndex, LG_LayerType layerType, eLocalZoneIndex localIndex, uint instanceIndex) => GetInstance((dimensionIndex, layerType, localIndex), instanceIndex);
@@ -117,13 +115,15 @@ namespace ExtraObjectiveSetup.BaseClasses
         {
             index2Instance.Clear();
             instances2Index.Clear();
-            builtInstances.Clear();
         }
+
+        public virtual void Init() { }
 
         public abstract (eDimensionIndex, LG_LayerType, eLocalZoneIndex) GetGlobalZoneIndex(T instance);
 
         public InstanceManager()
         {
+            LevelAPI.OnBuildStart += Clear;
             LevelAPI.OnLevelCleanup += Clear;
         }
     }
