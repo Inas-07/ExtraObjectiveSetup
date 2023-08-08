@@ -100,6 +100,7 @@ namespace ExtraObjectiveSetup.Patches.Uplink
                         __instance.OnEndOfQueue = new System.Action(() =>
                         {
                             roundOverride?.EventsOnRound.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.OnMid, false));
+                            uplinkPuzzle.CurrentRound.ShowGui = false;
 
                             if (roundOverride != null && roundOverride.ChainedPuzzleToEndRoundInstance != null)
                             {

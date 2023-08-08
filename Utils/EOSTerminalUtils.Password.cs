@@ -3,6 +3,7 @@ using GameData;
 using Localization;
 using System.Collections.Generic;
 using ExtraObjectiveSetup.BaseClasses.CustomTerminalDefinition;
+using System;
 
 namespace ExtraObjectiveSetup.Utils
 {
@@ -16,30 +17,17 @@ namespace ExtraObjectiveSetup.Utils
                 return null;
             }
 
-            if (!Builder.CurrentFloor.TryGetZoneByLocalIndex(dimensionIndex, layerType, localIndex, out var zone) || zone == null)
+            var candidateTerminals = FindTerminal(dimensionIndex, layerType, localIndex, (x => !x.HasPasswordPart));
+            if(candidateTerminals == null)
             {
-                EOSLogger.Error($"SelectTerminal: Could NOT find zone {(dimensionIndex, layerType, localIndex)}");
+                EOSLogger.Error($"SelectTerminal: Could not find zone {(dimensionIndex, layerType, localIndex)}!");
                 return null;
-            }
-
-            if (zone.TerminalsSpawnedInZone.Count <= 0)
-            {
-                EOSLogger.Error($"SelectTerminal: Could not find any terminals in zone {(dimensionIndex, layerType, localIndex)}");
-                return null;
-            }
-
-            List<LG_ComputerTerminal> candidateTerminals = new();
-            foreach (var terminal in zone.TerminalsSpawnedInZone)
-            {
-                if (!terminal.HasPasswordPart)
-                {
-                    candidateTerminals.Add(terminal);
-                }
             }
 
             if (candidateTerminals.Count <= 0)
             {
                 EOSLogger.Error($"SelectTerminal: Could not find any terminals without a password part in zone {(dimensionIndex, layerType, localIndex)}, putting the password on random (session) already used terminal.");
+                Builder.CurrentFloor.TryGetZoneByLocalIndex(dimensionIndex, layerType, localIndex, out var zone);
                 return zone.TerminalsSpawnedInZone[Builder.SessionSeedRandom.Range(0, zone.TerminalsSpawnedInZone.Count, "NO_TAG")];
             }
 
