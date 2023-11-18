@@ -5,6 +5,7 @@ using ExtraObjectiveSetup.JSON;
 using ExtraObjectiveSetup.Expedition;
 using ExtraObjectiveSetup.Expedition.Gears;
 using ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup;
+using ExtraObjectiveSetup.Expedition.EMP;
 
 namespace ExtraObjectiveSetup
 {
@@ -18,7 +19,7 @@ namespace ExtraObjectiveSetup
     {
         public const string AUTHOR = "Inas";
         public const string PLUGIN_NAME = "ExtraObjectiveSetup";
-        public const string VERSION = "1.3.1";
+        public const string VERSION = "1.3.3";
 
         private Harmony m_Harmony;
         

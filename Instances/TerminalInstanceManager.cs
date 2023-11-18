@@ -58,6 +58,7 @@ namespace ExtraObjectiveSetup.Instances
 
         private TerminalInstanceManager() 
         {
+            LevelAPI.OnBuildStart += Clear;
             LevelAPI.OnLevelCleanup += Clear;
         }
     

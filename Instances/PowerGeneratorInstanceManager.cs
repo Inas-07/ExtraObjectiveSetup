@@ -78,6 +78,7 @@ namespace ExtraObjectiveSetup.Instances
 
         private PowerGeneratorInstanceManager() 
         {
+            LevelAPI.OnBuildStart += Clear;
             LevelAPI.OnLevelCleanup += Clear;
             LevelAPI.OnEnterLevel += OutputLevelInstanceInfo;
         }

@@ -32,7 +32,7 @@ namespace ExtraObjectiveSetup.Utils
                     if (block != null)
                     {
                         ChainedPuzzleInstance puzzleInstance = ChainedPuzzleManager.CreatePuzzleInstance(block, terminal.SpawnNode.m_area, terminal.m_wardenObjectiveSecurityScanAlign.position, terminal.m_wardenObjectiveSecurityScanAlign, e.UseStaticBioscanPoints);
-                        var events = cmd.CommandEvents.GetRange(i, cmd.CommandEvents.Count - i).ToIl2Cpp(); // due to the nature of lambda, events cannot be put into System.Action
+                        var events = cmd.CommandEvents.GetRange(i, cmd.CommandEvents.Count - i).ToIl2Cpp(); 
                         puzzleInstance.OnPuzzleSolved += new System.Action(() => {
                             WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(events, eWardenObjectiveEventTrigger.None, true);
                         });
