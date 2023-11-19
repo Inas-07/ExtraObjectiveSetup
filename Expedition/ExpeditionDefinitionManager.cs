@@ -47,7 +47,7 @@ namespace ExtraObjectiveSetup.Expedition
 
         public void Init() { }
 
-        protected ExpeditionDefinitionManager()
+        private ExpeditionDefinitionManager()
         {
             string MODULE_CUSTOM_FOLDER = Path.Combine(MTFOPathAPI.CustomPath, "ExtraObjectiveSetup");
             if (!Directory.Exists(MODULE_CUSTOM_FOLDER))

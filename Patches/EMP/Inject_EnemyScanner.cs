@@ -22,9 +22,12 @@ namespace ExtraObjectiveSetup.Patches.EMP
             {
                 __instance.Sound.Post(EVENTS.BIOTRACKER_TOOL_LOOP_STOP);
                 __instance.m_screen.SetStatusText("ERROR");
+                __instance.m_progressBar.SetProgress(1.0f);
+                __instance.m_screen.SetGuixColor(UnityEngine.Color.yellow);
                 return false;
             }
             __instance.m_screen.SetStatusText("Ready to tag");
+            __instance.m_screen.SetGuixColor(UnityEngine.Color.red);
             return true;
         }
     }

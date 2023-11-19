@@ -9,11 +9,18 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
     {
         private EnemyScanner _scanner;
 
+        public static EMPBioTrackerHandler Instance { get; private set; }
+
         public override void Setup(GameObject gameObject, EMPController controller)
         {
-            if (gameObject.gameObject.TryGetComponent(out _scanner))
-                return;
-            EOSLogger.Error("Couldn't get bio-tracker component!");
+            base.Setup(gameObject, controller);
+            _scanner = gameObject.GetComponent<EnemyScanner>();
+            if (_scanner == null)
+            {
+                EOSLogger.Error("Couldn't get bio-tracker component!");
+            }
+
+            Instance = this;
         }
 
         protected override void DeviceOff()

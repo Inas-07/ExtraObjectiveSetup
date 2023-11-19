@@ -12,7 +12,10 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 
         public override void Setup(GameObject gameObject, EMPController controller)
         {
-            if (!gameObject.TryGetComponent(out _light))
+            base.Setup(gameObject, controller);
+
+            _light = gameObject.GetComponent<LG_Light>();
+            if (_light == null)
             {
                 EOSLogger.Warning("No Light!");
             }
@@ -20,7 +23,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
             {
                 _originalIntensity = _light.GetIntensity();
                 _originalColor = _light.m_color;
-                _state = EMPState.On;
+                State = EMPState.On;
             }
         }
 

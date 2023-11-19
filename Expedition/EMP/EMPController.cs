@@ -8,23 +8,28 @@ namespace ExtraObjectiveSetup.Expedition.EMP
     {
         private EMPHandler _handler;
         private bool _hasHandler;
-        private float _duration;
         private bool _setup;
 
+        public float duration { get; private set; }
+
         [HideFromIl2Cpp]
-        private bool IsEMPActive => _duration > Clock.Time;
+        private bool IsEMPActive => duration > Clock.Time;
 
         [HideFromIl2Cpp]
         public Vector3 Position => transform.position;
 
-        private void Awake() => EMPManager.AddTarget(this);
+        private void Awake() => EMPManager.Current.AddTarget(this);
 
         private void OnEnable()
         {
             if (GameStateManager.CurrentStateName != eGameStateName.InLevel || !_setup)
                 return;
-            _duration = Clock.Time + EMPManager.DurationFromPosition(transform.position);
-            if (_duration > Clock.Time)
+            if(!float.IsPositiveInfinity(duration)) // handle pEMP 
+            {
+                duration = Clock.Time + EMPManager.Current.DurationFromPosition(transform.position);
+            }
+
+            if (duration > Clock.Time)
             {
                 _handler.ForceState(EMPState.Off);
             }
@@ -42,10 +47,10 @@ namespace ExtraObjectiveSetup.Expedition.EMP
         }
 
         [HideFromIl2Cpp]
-        public void AddTime(float time) => _duration = Clock.Time + time;
+        public void AddTime(float time) => duration = Clock.Time + time;
 
         [HideFromIl2Cpp]
-        public void ClearTime() => _duration = Clock.Time - 1f;
+        public void ClearTime() => duration = Clock.Time - 1f;
 
         [HideFromIl2Cpp]
         public void AssignHandler(EMPHandler handler)
@@ -73,7 +78,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
         private void OnDestroy()
         {
-            EMPManager.RemoveTarget(this);
+            EMPManager.Current.RemoveTarget(this);
             _handler.OnDespawn();
             _handler = null;
         }

@@ -6,6 +6,8 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 {
     public class EMPSentryHandler : EMPHandler
     {
+        public static EMPSentryHandler Instance { get; private set; }
+
         private static Color _offColor = new Color()
         {
             r = 0.0f,
@@ -18,11 +20,15 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 
         public override void Setup(GameObject gameObject, EMPController controller)
         {
+            base.Setup(gameObject, controller);
+
             _sentry = gameObject.GetComponent<SentryGunInstance>();
             _visuals = gameObject.GetComponent<SentryGunInstance_ScannerVisuals_Plane>();
-            if (_sentry != null && _visuals != null)
-                return;
-            EOSLogger.Error($"Missing components on Sentry! Has Sentry?: {_sentry == null}, Has Visuals?: {_visuals == null}");
+            if (_sentry == null || _visuals == null)
+            {
+                EOSLogger.Error($"Missing components on Sentry! Has Sentry?: {_sentry == null}, Has Visuals?: {_visuals == null}");
+            }
+            Instance = this;
         }
 
         protected override void DeviceOff()

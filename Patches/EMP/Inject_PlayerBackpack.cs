@@ -12,8 +12,10 @@ namespace ExtraObjectiveSetup.Patches.EMP
         {
             foreach (PlayerBackpack backpack in PlayerBackpackManager.Current.m_backpacks.Values)
             {
-                AddHandlerForSlot(backpack, InventorySlot.GearStandard, new EMPGunSightHandler());
-                AddHandlerForSlot(backpack, InventorySlot.GearSpecial, new EMPGunSightHandler());
+                EMPGunSightHandler.StandardHandler = new EMPGunSightHandler();
+                EMPGunSightHandler.SpecialHandler = new EMPGunSightHandler();
+                AddHandlerForSlot(backpack, InventorySlot.GearStandard, EMPGunSightHandler.StandardHandler);
+                AddHandlerForSlot(backpack, InventorySlot.GearSpecial, EMPGunSightHandler.SpecialHandler);
                 AddToolHandler(backpack);
             }
         }

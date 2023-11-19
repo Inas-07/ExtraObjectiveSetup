@@ -10,6 +10,7 @@ using ExtraObjectiveSetup.Expedition.EMP;
 namespace ExtraObjectiveSetup
 {
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency("GTFO.FloLib", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOPartialDataUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(InjectLibUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
@@ -19,7 +20,7 @@ namespace ExtraObjectiveSetup
     {
         public const string AUTHOR = "Inas";
         public const string PLUGIN_NAME = "ExtraObjectiveSetup";
-        public const string VERSION = "1.3.3";
+        public const string VERSION = "1.3.4";
 
         private Harmony m_Harmony;
         
@@ -50,6 +51,7 @@ namespace ExtraObjectiveSetup
             ExpeditionDefinitionManager.Current.Init();
             ExpeditionGearManager.Current.Init();
             ExpeditionIGGroupManager.Current.Init();
+            EMPManager.Current.Init();
 
             Instances.GeneratorClusterInstanceManager.Current.Init();
             Instances.HSUActivatorInstanceManager.Current.Init();

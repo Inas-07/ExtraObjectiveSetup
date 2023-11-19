@@ -4,36 +4,24 @@ using GTFO.API;
 using Il2CppInterop.Runtime.Injection;
 using ExtraObjectiveSetup.Utils;
 using ExtraObjectiveSetup.Patches.EMP;
+using GameData;
+using LevelGeneration;
 
 namespace ExtraObjectiveSetup.Expedition.EMP
 {
     public class EMPManager
     {
-        private static readonly List<EMPController> _empTargets = new List<EMPController>();
-        private static readonly List<ActiveEMPs> _activeEMPs = new List<ActiveEMPs>();
+        private readonly List<EMPController> _empTargets = new List<EMPController>();
+        private readonly List<EMPShock> _activeEMPShock = new List<EMPShock>();
+        private readonly Dictionary<int, pEMP> _pEMPs = new();
 
         public static EMPManager Current { get; private set; } = new();
 
-        public void Init() { }
+        public void AddTarget(EMPController target) => _empTargets.Add(target);
 
-        static EMPManager()
-        {
-            LevelAPI.OnLevelCleanup += () =>
-            {
-                _empTargets.Clear();
-                EMPHandler.Cleanup();
-            };
+        public void RemoveTarget(EMPController target) => _empTargets.Remove(target);
 
-            LevelAPI.OnBuildDone += Inject_PlayerBackpack.Setup;
-
-            ClassInjector.RegisterTypeInIl2Cpp<EMPController>();
-        }
-
-        public static void AddTarget(EMPController target) => _empTargets.Add(target);
-
-        public static void RemoveTarget(EMPController target) => _empTargets.Remove(target);
-
-        public static void Activate(Vector3 position, float range, float duration)
+        public void ActivateEMPShock(Vector3 position, float range, float duration)
         {
             if (!GameStateManager.IsInExpedition)
             {
@@ -41,7 +29,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             }
             else
             {
-                _activeEMPs.Add(new ActiveEMPs(position, range, duration));
+                _activeEMPShock.Add(new EMPShock(position, range, duration));
                 foreach (EMPController empTarget in _empTargets)
                 {
                     if (Vector3.Distance(position, empTarget.Position) < range)
@@ -50,11 +38,11 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             }
         }
 
-        public static float DurationFromPosition(Vector3 position)
+        public float DurationFromPosition(Vector3 position)
         {
-            _activeEMPs.RemoveAll(e => Mathf.Round(e.RemainingTime) <= 0);
+            _activeEMPShock.RemoveAll(e => Mathf.Round(e.RemainingTime) <= 0);
             float totalDurationForPosition = 0;
-            foreach (ActiveEMPs active in _activeEMPs)
+            foreach (EMPShock active in _activeEMPShock)
             {
                 if (active.InRange(position))
                 {
@@ -64,24 +52,78 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             return totalDurationForPosition;
         }
 
-        private struct ActiveEMPs
+        public void TogglepEMPState(WardenObjectiveEventData e)
         {
-            private readonly Vector3 _position;
-            private readonly float _range;
-            private readonly float _duration;
-
-            public float RemainingTime => _duration - Clock.Time;
-
-            public ActiveEMPs(Vector3 position, float range, float duration)
-              : this()
+            int pEMPIndex = e.Count;
+            bool enabled = e.Enabled;
+            if(!_pEMPs.ContainsKey(pEMPIndex))
             {
-                _position = position;
-                _range = range;
-                _duration = Clock.Time + duration;
+                EOSLogger.Error($"TogglepEMPState: pEMPIndex {pEMPIndex} not defined");
+                return;
             }
 
-            public bool InRange(Vector3 position) => Vector3.Distance(position, _position) < _range;
-        }
-    }
+            ActiveState newState = enabled ? ActiveState.ENABLED : ActiveState.DISABLED;
+            var pEMP = _pEMPs[pEMPIndex];
+            pEMP.ChangeState(newState);
+            foreach (EMPController empTarget in _empTargets)
+            {
+                if (empTarget.GetComponent<LG_Light>() == null) continue;
 
+                if(enabled)
+                {
+                    if (pEMP.InRange(empTarget.Position))
+                    {
+                        empTarget.AddTime(float.PositiveInfinity);
+                    }
+                }
+                else
+                {
+                    empTarget.ClearTime();
+                }
+            }
+        }
+
+        private void BuildpEMPs()
+        {
+            var expDef = ExpeditionDefinitionManager.Current.GetDefinition(ExpeditionDefinitionManager.Current.CurrentMainLevelLayout);
+            if (expDef == null || expDef.PersistentEMPs == null || expDef.PersistentEMPs.Count < 1) return;
+
+            foreach(var pEMPDef in expDef.PersistentEMPs)
+            {
+                if (pEMPDef.pEMPIndex < 0) continue;
+
+                var pEMP = new pEMP(pEMPDef.Position.ToVector3(), pEMPDef.Range, pEMPDef);
+                _pEMPs[pEMPDef.pEMPIndex] = pEMP;
+            }
+        }
+
+        private void Clear()
+        {
+            _empTargets.Clear();
+            _activeEMPShock.Clear();
+            _pEMPs.Clear();
+            EMPHandler.Cleanup();
+        }
+
+        public void Init()
+        {
+            EMPWardenEvents.Init();
+
+            LevelAPI.OnBuildStart += Clear;
+            LevelAPI.OnLevelCleanup += Clear;
+
+            LevelAPI.OnBuildDone += BuildpEMPs;
+        }
+
+        public IEnumerable<pEMP> pEMPs => _pEMPs.Values;
+        public IEnumerable<EMPController> EMPTargets => _empTargets;
+
+        static EMPManager()
+        {
+            LevelAPI.OnBuildDone += Inject_PlayerBackpack.Setup;
+            ClassInjector.RegisterTypeInIl2Cpp<EMPController>();
+            ClassInjector.RegisterTypeInIl2Cpp<PlayerpEMPComponent>();
+        }
+
+    }
 }

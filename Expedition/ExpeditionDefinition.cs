@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ExtraObjectiveSetup.Expedition.EMP;
 using ExtraObjectiveSetup.Expedition.Gears;
 using ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup;
 
@@ -12,5 +13,7 @@ namespace ExtraObjectiveSetup.Expedition
         public ExpeditionGearsDefinition ExpeditionGears { set; get; } = new();
     
         public List<ExpeditionIGGroup> GeneratorGroups { set; get; } = new() { new() };
+    
+        public List<pEMPDefinition> PersistentEMPs { set; get; } = new() { new() };
     }
 }

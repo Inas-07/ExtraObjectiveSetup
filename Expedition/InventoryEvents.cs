@@ -1,17 +1,22 @@
 ﻿using Gear;
-
+using System;
 namespace ExtraObjectiveSetup.Expedition
 {
-    public delegate void InventoryEventHandler(GearPartFlashlight flashlight);
-
     public static class InventoryEvents
     {
-        public static event InventoryEventHandler ItemWielded;
+        public static event Action<GearPartFlashlight> FlashLightWielded;
 
-        internal static void OnWieldItem(GearPartFlashlight flashlight)
+
+        public static event Action AmmoWeaponWielded; // standard / special weapon
+
+        internal static void OnWieldFlashLight(GearPartFlashlight flashlight)
         {
-            InventoryEventHandler itemWielded = ItemWielded;
-            itemWielded?.Invoke(flashlight);
+            FlashLightWielded?.Invoke(flashlight);
+        }
+
+        internal static void OnWieldAmmoWeapon()
+        {
+            AmmoWeaponWielded?.Invoke();
         }
     }
 }

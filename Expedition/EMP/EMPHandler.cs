@@ -1,16 +1,18 @@
 ﻿using UnityEngine;
-using ExtraObjectiveSetup.Utils;
 
 namespace ExtraObjectiveSetup.Expedition.EMP
 {
     public abstract class EMPHandler
     {
         protected DeviceState _deviceState;
-        protected EMPState _state;
         protected float _stateTimer;
         private static bool _isLocalPlayerDisabled;
         private float _delayTimer;
         private bool _destroyed;
+
+        public EMPState State { get; protected set; }
+
+        public EMPController controller { get; protected set; }
 
         public static bool IsLocalPlayerDisabled => _isLocalPlayerDisabled && GameStateManager.CurrentStateName == eGameStateName.InLevel;
 
@@ -22,16 +24,18 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
         protected virtual bool IsDeviceOnPlayer => false;
 
-        public abstract void Setup(GameObject gameObject, EMPController controller);
+        public virtual void Setup(GameObject gameObject, EMPController controller)
+        {
+            this.controller = controller;
+        }
 
         public static void Cleanup() => _isLocalPlayerDisabled = false;
 
         public void ForceState(EMPState state)
         {
-            if (_state == state)
+            if (this.State == state)
                 return;
-            _state = state;
-            EOSLogger.Debug($"Force State -> {state}");
+            this.State = state;
             _delayTimer = Clock.Time - 1f;
             _stateTimer = Clock.Time - 1f;
             if (state != EMPState.On)
@@ -55,21 +59,21 @@ namespace ExtraObjectiveSetup.Expedition.EMP
         {
             if (_destroyed)
                 return;
-            if (isEMPD && _state == EMPState.On)
+            if (isEMPD && State == EMPState.On)
             {
                 float randomDelay = GetRandomDelay(MinDelay, MaxDelay);
-                _state = EMPState.FlickerOff;
+                State = EMPState.FlickerOff;
                 _delayTimer = Clock.Time + randomDelay;
                 _stateTimer = Clock.Time + FlickerDuration + randomDelay;
             }
-            if (!isEMPD && _state == EMPState.Off)
+            if (!isEMPD && State == EMPState.Off)
             {
                 float randomDelay = GetRandomDelay(0.0f, 1.5f);
-                _state = EMPState.FlickerOn;
+                State = EMPState.FlickerOn;
                 _delayTimer = Clock.Time + randomDelay;
                 _stateTimer = Clock.Time + FlickerDuration + randomDelay;
             }
-            switch (_state)
+            switch (State)
             {
                 case EMPState.On:
                     if (_deviceState == DeviceState.On)
@@ -88,7 +92,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
                         FlickerDevice();
                         break;
                     }
-                    _state = EMPState.Off;
+                    State = EMPState.Off;
                     break;
                 case EMPState.Off:
                     if (_deviceState == DeviceState.Off)
@@ -107,7 +111,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
                         FlickerDevice();
                         break;
                     }
-                    _state = EMPState.On;
+                    State = EMPState.On;
                     break;
             }
         }

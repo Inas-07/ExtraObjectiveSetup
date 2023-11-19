@@ -10,18 +10,31 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
     {
         public GameObject[] _sightPictures;
 
+        public static EMPGunSightHandler StandardHandler { get; internal set; }
+
+        public static EMPGunSightHandler SpecialHandler { get; internal set; }
+
         public override void Setup(GameObject gameObject, EMPController controller)
         {
+            base.Setup(gameObject, controller);
+
             Il2CppArrayBase<Renderer> componentsInChildren = gameObject.GetComponentsInChildren<Renderer>(true);
             if (componentsInChildren != null)
                 _sightPictures = componentsInChildren.Where(x => x.sharedMaterial != null && x.sharedMaterial.shader != null).Where(
-                            x => x.sharedMaterial.shader.name.Contains("HolographicSight")).Select(
-                        x => x.gameObject)
-.ToArray(
-                    );
-            if (_sightPictures != null && _sightPictures.Length >= 1)
-                return;
-            EOSLogger.Warning($"Unable to find sight on {gameObject.name}!");
+                            x => x.sharedMaterial.shader.name.Contains("HolographicSight")
+                            ).Select(x => x.gameObject).ToArray();
+            if (_sightPictures == null || _sightPictures.Length < 1)
+            {
+                EOSLogger.Warning($"Unable to find sight on {gameObject.name}!");
+            }
+        }
+
+        private void WeaponWielded()
+        {
+            if (PlayerpEMPComponent.Current.InAnypEMP)
+            {
+                DeviceOff();
+            }
         }
 
         protected override void DeviceOff() => ForEachSights(x => x.SetActive(false));

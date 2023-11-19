@@ -12,12 +12,16 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
         private float _originalIntensity;
         private bool _originalFlashlightState;
 
+        public static EMPPlayerFlashLightHandler Instance { get; private set; } 
+
         protected override bool IsDeviceOnPlayer => true;
 
         private bool FlashlightEnabled => _inventory.FlashlightEnabled;
 
         public override void Setup(GameObject gameObject, EMPController controller)
         {
+            base.Setup(gameObject, controller);
+
             _inventory = gameObject.GetComponent<PlayerAgent>().Inventory;
             if (_inventory == null)
             {
@@ -25,9 +29,11 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
             }
             else
             {
-                _state = EMPState.On;
-                InventoryEvents.ItemWielded += new InventoryEventHandler(InventoryEvents_ItemWielded);
+                State = EMPState.On;
+                InventoryEvents.FlashLightWielded += InventoryEvents_ItemWielded;
             }
+
+            Instance = this;
         }
 
         private void InventoryEvents_ItemWielded(GearPartFlashlight flashlight) => _originalIntensity = GameDataBlockBase<FlashlightSettingsDataBlock>.GetBlock(flashlight.m_settingsID).intensity;
