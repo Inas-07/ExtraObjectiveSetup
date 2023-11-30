@@ -1,12 +1,27 @@
 ﻿using AK;
 using ExtraObjectiveSetup.Utils;
+using GTFO.API;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 {
     public class EMPSentryHandler : EMPHandler
     {
-        public static EMPSentryHandler Instance { get; private set; }
+        private static List<EMPSentryHandler> handlers = new();
+
+        public static IEnumerable<EMPSentryHandler> Handlers => handlers;
+
+        private static void Clear()
+        {
+            handlers.Clear();
+        }
+
+        static EMPSentryHandler()
+        {
+            LevelAPI.OnBuildStart += Clear;
+            LevelAPI.OnLevelCleanup += Clear;
+        }
 
         private static Color _offColor = new Color()
         {
@@ -28,7 +43,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
             {
                 EOSLogger.Error($"Missing components on Sentry! Has Sentry?: {_sentry == null}, Has Visuals?: {_visuals == null}");
             }
-            Instance = this;
+            handlers.Add( this );
         }
 
         protected override void DeviceOff()

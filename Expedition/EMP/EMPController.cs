@@ -6,7 +6,8 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 {
     public sealed class EMPController : MonoBehaviour
     {
-        private EMPHandler _handler;
+        public EMPHandler Handler { get; private set; }
+
         private bool _hasHandler;
         private bool _setup;
 
@@ -31,11 +32,11 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
             if (duration > Clock.Time)
             {
-                _handler.ForceState(EMPState.Off);
+                Handler.ForceState(EMPState.Off);
             }
             else
             {
-                _handler.ForceState(EMPState.On);
+                Handler.ForceState(EMPState.On);
             }
         }
 
@@ -43,7 +44,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
         {
             if (!_hasHandler)
                 return;
-            _handler.Tick(IsEMPActive);
+            Handler.Tick(IsEMPActive);
         }
 
         [HideFromIl2Cpp]
@@ -55,14 +56,14 @@ namespace ExtraObjectiveSetup.Expedition.EMP
         [HideFromIl2Cpp]
         public void AssignHandler(EMPHandler handler)
         {
-            if (_handler != null)
+            if (Handler != null)
             {
                 EOSLogger.Warning("Tried to assign a handler to a controller that already had one!");
             }
             else
             {
-                _handler = handler;
-                _handler.Setup(gameObject, this);
+                Handler = handler;
+                Handler.Setup(gameObject, this);
                 _hasHandler = true;
                 _setup = true;
             }
@@ -71,16 +72,16 @@ namespace ExtraObjectiveSetup.Expedition.EMP
         [HideFromIl2Cpp]
         public void ForceState(EMPState state)
         {
-            if (_handler == null)
+            if (Handler == null)
                 return;
-            _handler.ForceState(state);
+            Handler.ForceState(state);
         }
 
         private void OnDestroy()
         {
             EMPManager.Current.RemoveTarget(this);
-            _handler.OnDespawn();
-            _handler = null;
+            Handler.OnDespawn();
+            Handler = null;
         }
     }
 

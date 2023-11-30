@@ -6,49 +6,42 @@ using Player;
 
 namespace ExtraObjectiveSetup.Patches.EMP
 {
-    internal class Inject_PlayerBackpack
+    internal static class Inject_PlayerBackpack
     {
-        public static void Setup()
-        {
-            foreach (PlayerBackpack backpack in PlayerBackpackManager.Current.m_backpacks.Values)
-            {
-                EMPGunSightHandler.StandardHandler = new EMPGunSightHandler();
-                EMPGunSightHandler.SpecialHandler = new EMPGunSightHandler();
-                AddHandlerForSlot(backpack, InventorySlot.GearStandard, EMPGunSightHandler.StandardHandler);
-                AddHandlerForSlot(backpack, InventorySlot.GearSpecial, EMPGunSightHandler.SpecialHandler);
-                AddToolHandler(backpack);
-            }
-        }
+        //internal static void SetupToolHandler()
+        //{
+        //    var backpack = PlayerBackpackManager.LocalBackpack;
+        //    if (backpack.TryGetBackpackItem(InventorySlot.GearClass, out var backpackItem))
+        //    {
+        //        if (backpackItem.Instance.gameObject.GetComponent<EMPController>() != null)
+        //        {
+        //            EOSLogger.Debug("Item already has controller, skipping...");
+        //            return;
+        //        }
 
-        private static void AddToolHandler(PlayerBackpack backpack)
+        //        if (backpackItem.Instance.GetComponent<EnemyScanner>() != null)
+        //        {
+        //            backpackItem.Instance.gameObject.AddComponent<EMPController>().AssignHandler(new EMPBioTrackerHandler());
+        //        }
+        //    }
+        //    else
+        //    {
+        //        EOSLogger.Warning($"Couldn't get item for slot {InventorySlot.GearClass}!");
+        //    }
+        //}
+
+        internal static void SetupHandlerForSlot(InventorySlot slot)
         {
-            BackpackItem backpackItem;
-            if (backpack.TryGetBackpackItem(InventorySlot.GearClass, out backpackItem))
+            var backpack = PlayerBackpackManager.LocalBackpack;
+            if (backpack.TryGetBackpackItem(slot, out var backpackItem))
             {
                 if (backpackItem.Instance.gameObject.GetComponent<EMPController>() != null)
-                    EOSLogger.Debug("Item already has controller, skipping...");
-                if (backpackItem.Instance.GetComponent<EnemyScanner>() != null)
                 {
-                    backpackItem.Instance.gameObject.AddComponent<EMPController>().AssignHandler(new EMPBioTrackerHandler());
-                }
-            }
-            else
-            {
-                EOSLogger.Warning($"Couldn't get item for slot {InventorySlot.GearClass}!");
-            }
-        }
-
-        private static void AddHandlerForSlot(
-          PlayerBackpack backpack,
-          InventorySlot slot,
-          EMPHandler handler)
-        {
-            BackpackItem backpackItem;
-            if (backpack.TryGetBackpackItem(slot, out backpackItem))
-            {
-                if (backpackItem.Instance.gameObject.GetComponent<EMPController>() != null)
                     EOSLogger.Debug("Item already has controller, skipping...");
-                backpackItem.Instance.gameObject.AddComponent<EMPController>().AssignHandler(handler);
+                    return;
+                }
+
+                backpackItem.Instance.gameObject.AddComponent<EMPController>().AssignHandler(new EMPGunSightHandler());
             }
             else
             {
@@ -56,5 +49,4 @@ namespace ExtraObjectiveSetup.Patches.EMP
             }
         }
     }
-
 }

@@ -14,11 +14,19 @@ namespace ExtraObjectiveSetup.Patches.EMP
         {
             if (EMPHandler.IsLocalPlayerDisabled)
             {
-                EMPPlayerHudHandler.Instance.ForceState(EMPState.Off);
+                foreach(var handler in EMPPlayerHudHandler.Handlers)
+                {
+                    handler.ForceState(EMPState.Off);
+                }
                 return false;
             }
             if (GameStateManager.CurrentStateName == eGameStateName.InLevel)
-                EMPPlayerHudHandler.Instance.ForceState(EMPState.On);
+            {
+                foreach (var handler in EMPPlayerHudHandler.Handlers)
+                {
+                    handler.ForceState(EMPState.On);
+                }
+            }
             return true;
         }
     }

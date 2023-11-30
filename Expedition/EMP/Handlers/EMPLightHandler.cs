@@ -1,11 +1,28 @@
 ﻿using ExtraObjectiveSetup.Utils;
+using GTFO.API;
 using LevelGeneration;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 {
     public class EMPLightHandler : EMPHandler
     {
+        private static List<EMPLightHandler> handlers = new();
+
+        public static IEnumerable<EMPLightHandler> Handlers => handlers;
+
+        private static void Clear()
+        {
+            handlers.Clear();
+        }
+
+        static EMPLightHandler()
+        {
+            LevelAPI.OnBuildStart += Clear;
+            LevelAPI.OnLevelCleanup += Clear;
+        }
+
         private LG_Light _light;
         private float _originalIntensity;
         private Color _originalColor;
@@ -25,6 +42,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
                 _originalColor = _light.m_color;
                 State = EMPState.On;
             }
+            handlers.Add(this);
         }
 
         protected override void FlickerDevice()

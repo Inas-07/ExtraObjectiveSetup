@@ -3,16 +3,33 @@ using Gear;
 using ExtraObjectiveSetup.Utils;
 using Player;
 using UnityEngine;
+using System.Collections.Generic;
+using GTFO.API;
 
 namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 {
     public class EMPPlayerFlashLightHandler : EMPHandler
     {
+
+        private static List<EMPPlayerFlashLightHandler> handlers = new();
+
+        public static IEnumerable<EMPPlayerFlashLightHandler> Handlers => handlers;
+
+        private static void Clear()
+        {
+            handlers.Clear();
+        }
+
+        static EMPPlayerFlashLightHandler()
+        {
+            LevelAPI.OnBuildStart += Clear;
+            LevelAPI.OnLevelCleanup += Clear;
+        }
+
+
         private PlayerInventoryBase _inventory;
         private float _originalIntensity;
         private bool _originalFlashlightState;
-
-        public static EMPPlayerFlashLightHandler Instance { get; private set; } 
 
         protected override bool IsDeviceOnPlayer => true;
 
@@ -30,10 +47,10 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
             else
             {
                 State = EMPState.On;
-                InventoryEvents.FlashLightWielded += InventoryEvents_ItemWielded;
+                Events.FlashLightWielded += InventoryEvents_ItemWielded;
             }
 
-            Instance = this;
+            handlers.Add(this);
         }
 
         private void InventoryEvents_ItemWielded(GearPartFlashlight flashlight) => _originalIntensity = GameDataBlockBase<FlashlightSettingsDataBlock>.GetBlock(flashlight.m_settingsID).intensity;
@@ -59,6 +76,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
                 return;
             _inventory.m_flashlight.intensity = GetRandom01() * _originalIntensity;
         }
+
     }
 
 }

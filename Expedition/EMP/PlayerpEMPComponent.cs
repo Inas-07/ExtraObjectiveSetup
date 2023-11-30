@@ -1,7 +1,6 @@
 ﻿using ExtraObjectiveSetup.Expedition.EMP.Handlers;
 using Player;
 using UnityEngine;
-using GTFO.API;
 
 namespace ExtraObjectiveSetup.Expedition.EMP
 {
@@ -11,8 +10,8 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
         public const float UPDATE_INTERVAL = 1.0f;
 
-        public static PlayerpEMPComponent Current { get; private set; } = null;
-
+        public static PlayerpEMPComponent Current { get; internal set; } = null;
+ 
         public bool InAnypEMP { get; private set; } = false;
 
         void Update()
@@ -33,7 +32,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
                 BioTracker = false,
                 PlayerFlashLight = false,
                 PlayerHUD = false,
-                //EnvLight = false,
+                EnvLight = false,
                 GunSight = false,
                 Sentry = false
             };
@@ -45,46 +44,70 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
                 if (pEMP.InRange(player.m_position))
                 {
-                    itemToDisable.BioTracker |= pEMP.def.ItemToDisable.BioTracker;
-                    itemToDisable.PlayerFlashLight |= pEMP.def.ItemToDisable.PlayerFlashLight;
-                    itemToDisable.PlayerHUD |= pEMP.def.ItemToDisable.PlayerHUD;
+                    itemToDisable.BioTracker = itemToDisable.BioTracker || pEMP.def.ItemToDisable.BioTracker;
+                    itemToDisable.PlayerFlashLight = itemToDisable.PlayerFlashLight || pEMP.def.ItemToDisable.PlayerFlashLight;
+                    itemToDisable.PlayerHUD = itemToDisable.PlayerHUD || pEMP.def.ItemToDisable.PlayerHUD;
                     //itemToDisable.EnvLight |= pEMP.def.ItemToDisable.EnvLight;
-                    itemToDisable.GunSight |= pEMP.def.ItemToDisable.GunSight;
-                    itemToDisable.Sentry |= pEMP.def.ItemToDisable.Sentry;
+                    itemToDisable.GunSight = itemToDisable.GunSight || pEMP.def.ItemToDisable.GunSight;
+                    itemToDisable.Sentry = itemToDisable.Sentry || pEMP.def.ItemToDisable.Sentry;
                     InAnypEMP = true;
                 }
             }
 
-            if(itemToDisable.BioTracker) 
-                EMPBioTrackerHandler.Instance?.controller.AddTime(float.PositiveInfinity);
+            if (itemToDisable.BioTracker)
+            {
+                foreach (var handler in EMPBioTrackerHandler.Handlers)
+                    handler?.controller?.AddTime(float.PositiveInfinity);
+            }
             else
-                EMPBioTrackerHandler.Instance?.controller.ClearTime();
+            {
+                foreach (var handler in EMPBioTrackerHandler.Handlers)
+                    handler?.controller?.ClearTime();
+            }
 
-            if(itemToDisable.PlayerFlashLight)
-                EMPPlayerFlashLightHandler.Instance?.controller.AddTime(float.PositiveInfinity);
+            if (itemToDisable.PlayerFlashLight)
+            {
+                foreach (var handler in EMPPlayerFlashLightHandler.Handlers)
+                    handler?.controller?.AddTime(float.PositiveInfinity);
+            }
             else
-                EMPPlayerFlashLightHandler.Instance?.controller.ClearTime();
+            {
+                foreach (var handler in EMPPlayerFlashLightHandler.Handlers)
+                    handler?.controller?.ClearTime();
+            }
 
             if (itemToDisable.PlayerHUD)
-                EMPPlayerHudHandler.Instance?.controller.AddTime(float.PositiveInfinity);
+            {
+                foreach (var handler in EMPPlayerHudHandler.Handlers)
+                    handler?.controller?.AddTime(float.PositiveInfinity);
+            }
             else
-                EMPPlayerHudHandler.Instance?.controller.ClearTime();
+            {
+                foreach (var handler in EMPPlayerHudHandler.Handlers)
+                    handler?.controller?.ClearTime();
+            }
 
             if (itemToDisable.GunSight)
             {
-                EMPGunSightHandler.StandardHandler?.controller.AddTime(float.PositiveInfinity);
-                EMPGunSightHandler.SpecialHandler?.controller.AddTime(float.PositiveInfinity);
+                foreach(var handler in EMPGunSightHandler.Handlers)
+                    handler?.controller?.AddTime(float.PositiveInfinity);                
             }
             else
             {
-                EMPGunSightHandler.StandardHandler?.controller.ClearTime();
-                EMPGunSightHandler.SpecialHandler?.controller.ClearTime();
+                foreach (var handler in EMPGunSightHandler.Handlers)
+                    handler?.controller?.ClearTime();
             }
 
             if (itemToDisable.Sentry)
-                EMPSentryHandler.Instance?.controller.AddTime(float.PositiveInfinity);
+            {
+                foreach (var handler in EMPSentryHandler.Handlers)
+                    handler?.controller?.AddTime(float.PositiveInfinity);
+            }
             else
-                EMPSentryHandler.Instance?.controller.ClearTime();
+            {
+                foreach (var handler in EMPSentryHandler.Handlers)
+                    handler?.controller?.ClearTime();
+            }
         }
 
         public void Reset()
@@ -94,16 +117,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
         static PlayerpEMPComponent()
         {
-            LevelAPI.OnBuildStart += () =>
-            {
-                if (Current == null)
-                {
-                    Current = PlayerManager.Current.m_localPlayerAgentInLevel.gameObject.AddComponent<PlayerpEMPComponent>();
 
-                    LevelAPI.OnBuildStart += Current.Reset;
-                    LevelAPI.OnLevelCleanup += Current.Reset;
-                }
-            };
         }
     }
 }

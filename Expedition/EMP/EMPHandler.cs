@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace ExtraObjectiveSetup.Expedition.EMP
 {
@@ -14,6 +16,8 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
         public EMPController controller { get; protected set; }
 
+        public GameObject gameObject { get; protected set; }
+
         public static bool IsLocalPlayerDisabled => _isLocalPlayerDisabled && GameStateManager.CurrentStateName == eGameStateName.InLevel;
 
         protected virtual float FlickerDuration => 0.2f;
@@ -26,6 +30,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
         public virtual void Setup(GameObject gameObject, EMPController controller)
         {
+            this.gameObject = gameObject;
             this.controller = controller;
         }
 

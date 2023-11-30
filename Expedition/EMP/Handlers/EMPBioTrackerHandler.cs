@@ -2,14 +2,30 @@
 using Gear;
 using ExtraObjectiveSetup.Utils;
 using UnityEngine;
+using System.Collections.Generic;
+using GTFO.API;
 
 namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 {
     public class EMPBioTrackerHandler : EMPHandler
     {
+        private static List<EMPBioTrackerHandler> handlers = new();
+
+        public static IEnumerable<EMPBioTrackerHandler> Handlers => handlers;
+
+        private static void Clear()
+        {
+            handlers.Clear();
+        }
+
+        static EMPBioTrackerHandler()
+        {
+            LevelAPI.OnBuildStart += Clear;
+            LevelAPI.OnLevelCleanup += Clear;
+        }
+
         private EnemyScanner _scanner;
 
-        public static EMPBioTrackerHandler Instance { get; private set; }
 
         public override void Setup(GameObject gameObject, EMPController controller)
         {
@@ -20,7 +36,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
                 EOSLogger.Error("Couldn't get bio-tracker component!");
             }
 
-            Instance = this;
+            handlers.Add(this);
         }
 
         protected override void DeviceOff()
@@ -32,5 +48,6 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
         protected override void DeviceOn() => _scanner.m_graphics.m_display.enabled = true;
 
         protected override void FlickerDevice() => _scanner.enabled = FlickerUtil();
+
     }
 }

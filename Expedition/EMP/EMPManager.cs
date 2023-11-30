@@ -3,19 +3,32 @@ using System.Collections.Generic;
 using GTFO.API;
 using Il2CppInterop.Runtime.Injection;
 using ExtraObjectiveSetup.Utils;
-using ExtraObjectiveSetup.Patches.EMP;
-using GameData;
-using LevelGeneration;
+using Player;
 
 namespace ExtraObjectiveSetup.Expedition.EMP
 {
-    public class EMPManager
+    public partial class EMPManager
     {
         private readonly List<EMPController> _empTargets = new List<EMPController>();
         private readonly List<EMPShock> _activeEMPShock = new List<EMPShock>();
-        private readonly Dictionary<int, pEMP> _pEMPs = new();
 
         public static EMPManager Current { get; private set; } = new();
+
+        public PlayerAgent LocalPlayerAgent { get; private set ;} = null;
+
+        public void SetLocalPlayerAgent(PlayerAgent localPlayerAgent)
+        {
+            this.LocalPlayerAgent = localPlayerAgent;
+            if (PlayerpEMPComponent.Current != null)
+            {
+                LevelAPI.OnBuildStart -= PlayerpEMPComponent.Current.Reset;
+                LevelAPI.OnLevelCleanup -= PlayerpEMPComponent.Current.Reset;
+            }
+
+            PlayerpEMPComponent.Current = localPlayerAgent.gameObject.AddComponent<PlayerpEMPComponent>();
+            LevelAPI.OnBuildStart += PlayerpEMPComponent.Current.Reset;
+            LevelAPI.OnLevelCleanup += PlayerpEMPComponent.Current.Reset;
+        }
 
         public void AddTarget(EMPController target) => _empTargets.Add(target);
 
@@ -52,56 +65,12 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             return totalDurationForPosition;
         }
 
-        public void TogglepEMPState(WardenObjectiveEventData e)
-        {
-            int pEMPIndex = e.Count;
-            bool enabled = e.Enabled;
-            if(!_pEMPs.ContainsKey(pEMPIndex))
-            {
-                EOSLogger.Error($"TogglepEMPState: pEMPIndex {pEMPIndex} not defined");
-                return;
-            }
-
-            ActiveState newState = enabled ? ActiveState.ENABLED : ActiveState.DISABLED;
-            var pEMP = _pEMPs[pEMPIndex];
-            pEMP.ChangeState(newState);
-            foreach (EMPController empTarget in _empTargets)
-            {
-                if (empTarget.GetComponent<LG_Light>() == null) continue;
-
-                if(enabled)
-                {
-                    if (pEMP.InRange(empTarget.Position))
-                    {
-                        empTarget.AddTime(float.PositiveInfinity);
-                    }
-                }
-                else
-                {
-                    empTarget.ClearTime();
-                }
-            }
-        }
-
-        private void BuildpEMPs()
-        {
-            var expDef = ExpeditionDefinitionManager.Current.GetDefinition(ExpeditionDefinitionManager.Current.CurrentMainLevelLayout);
-            if (expDef == null || expDef.PersistentEMPs == null || expDef.PersistentEMPs.Count < 1) return;
-
-            foreach(var pEMPDef in expDef.PersistentEMPs)
-            {
-                if (pEMPDef.pEMPIndex < 0) continue;
-
-                var pEMP = new pEMP(pEMPDef.Position.ToVector3(), pEMPDef.Range, pEMPDef);
-                _pEMPs[pEMPDef.pEMPIndex] = pEMP;
-            }
-        }
-
         private void Clear()
         {
             _empTargets.Clear();
             _activeEMPShock.Clear();
             _pEMPs.Clear();
+            _processedSlot.Clear();
             EMPHandler.Cleanup();
         }
 
@@ -109,21 +78,26 @@ namespace ExtraObjectiveSetup.Expedition.EMP
         {
             EMPWardenEvents.Init();
 
-            LevelAPI.OnBuildStart += Clear;
+            LevelAPI.OnBuildStart += () => { Clear(); BuildpEMPs(); };
             LevelAPI.OnLevelCleanup += Clear;
 
-            LevelAPI.OnBuildDone += BuildpEMPs;
+            Events.EnterGSInLevel += SetupToolHandler;
+            Events.InventoryWielded += SetupGunSights;
         }
 
-        public IEnumerable<pEMP> pEMPs => _pEMPs.Values;
+
         public IEnumerable<EMPController> EMPTargets => _empTargets;
+
+        private EMPManager()
+        {
+            NetworkAPI.RegisterEvent<Sync>(CLIENT_SYNC_REQUEST_EVENT, Master_ReceiveSyncRequest);
+            NetworkAPI.RegisterEvent<pEMPState>(CLIENT_RECEIVE_SYNC_EVENT, ClientReceivepEMPState);
+        }
 
         static EMPManager()
         {
-            LevelAPI.OnBuildDone += Inject_PlayerBackpack.Setup;
             ClassInjector.RegisterTypeInIl2Cpp<EMPController>();
             ClassInjector.RegisterTypeInIl2Cpp<PlayerpEMPComponent>();
         }
-
     }
 }

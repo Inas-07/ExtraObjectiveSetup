@@ -1,7 +1,6 @@
 ﻿using System;
-using UnityEngine;
-using FloLib.Networks;
 using ExtraObjectiveSetup.Utils;
+
 
 namespace ExtraObjectiveSetup.Expedition.EMP
 {
@@ -11,26 +10,16 @@ namespace ExtraObjectiveSetup.Expedition.EMP
         ENABLED,
     }
 
-    public struct pEMPState
-    {
-        public ActiveState Status = ActiveState.DISABLED;
-
-        public pEMPState() {}
-    }
-
-
     public class pEMP : EMPShock
     {
         public pEMPDefinition def { get; private set; }
 
-        public ActiveState State => stateReplicator.State.Status;
+        public ActiveState State { get; private set; } = ActiveState.DISABLED;
 
-        public StateReplicator<pEMPState> stateReplicator { get; private set; }
-
-        public void ChangeState(ActiveState status) => stateReplicator.SetState(new pEMPState { Status = status });
-
-        private void OnStateChanged(pEMPState oldState, pEMPState newState, bool isRecall)
+        public void ChangeState(ActiveState newState)
         {
+            EOSLogger.Warning($"pEMP_{def.pEMPIndex} Change state: {State} -> {newState}");
+            State = newState;
             switch (State)
             {
                 case ActiveState.DISABLED:
@@ -41,13 +30,11 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             }
         }
 
-        public pEMP(Vector3 position, float range, pEMPDefinition def): base(position, range, float.NegativeInfinity)
+        public pEMP(pEMPDefinition def)
+            : base(def.Position.ToVector3(), def.Range, float.NegativeInfinity)
         {
             this.def = def;
-            stateReplicator = StateReplicator<pEMPState>.Create(1, default, LifeTimeType.Level);
-            stateReplicator.OnStateChanged += OnStateChanged;
-
-            EOSLogger.Warning("pEMP inited");
+            ChangeState(ActiveState.DISABLED);
         }
     }
 }

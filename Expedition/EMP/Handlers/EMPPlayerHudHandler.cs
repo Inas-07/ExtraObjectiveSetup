@@ -1,4 +1,4 @@
-﻿using ExtraObjectiveSetup.Utils;
+﻿using GTFO.API;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,11 +6,23 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 {
     public class EMPPlayerHudHandler : EMPHandler
     {
+
+        private static List<EMPPlayerHudHandler> handlers = new();
+
+        public static IEnumerable<EMPPlayerHudHandler> Handlers => handlers;
+
+        private static void Clear()
+        {
+            handlers.Clear();
+        }
+
+        static EMPPlayerHudHandler()
+        {
+            LevelAPI.OnBuildStart += Clear;
+            LevelAPI.OnLevelCleanup += Clear;
+        }
+
         private readonly List<RectTransformComp> _targets = new List<RectTransformComp>();
-
-        public static EMPPlayerHudHandler Instance { get; private set; }
-
-        //public static EMPPlayerHudHandler Instance => _instance;
 
         public override void Setup(GameObject gameObject, EMPController controller)
         {
@@ -21,7 +33,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
             _targets.Add(GuiManager.PlayerLayer.m_wardenObjective);
             _targets.Add(GuiManager.PlayerLayer.Inventory);
             _targets.Add(GuiManager.PlayerLayer.m_playerStatus);
-            Instance = this;
+            handlers.Add(this);
         }
 
         protected override void DeviceOff()

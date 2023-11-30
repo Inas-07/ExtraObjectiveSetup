@@ -15,7 +15,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
     public class pEMPDefinition
     {
-        public int pEMPIndex { get; set; } = -1;
+        public uint pEMPIndex { get; set; } = 0u;
 
         public Vec3 Position { set; get; } = new();
 
