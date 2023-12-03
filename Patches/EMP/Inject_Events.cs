@@ -1,6 +1,7 @@
 ﻿using Gear;
 using HarmonyLib;
 using ExtraObjectiveSetup.Expedition;
+using ExtraObjectiveSetup.Utils;
 
 namespace ExtraObjectiveSetup.Patches.EMP
 {

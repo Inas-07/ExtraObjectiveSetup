@@ -15,8 +15,6 @@ namespace ExtraObjectiveSetup.Patches.EMP
         {
             if (!__instance.IsLocallyOwned)
                 return;
-            __instance.gameObject.AddComponent<EMPController>().AssignHandler(new EMPPlayerFlashLightHandler());
-            __instance.gameObject.AddComponent<EMPController>().AssignHandler(new EMPPlayerHudHandler());
             EMPManager.Current.SetLocalPlayerAgent(__instance);
         }
     }

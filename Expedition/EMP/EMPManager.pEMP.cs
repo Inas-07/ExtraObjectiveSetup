@@ -23,19 +23,11 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             public pEMPState(pEMPState o) { o.pEMPIndex = pEMPIndex; o.enabled = enabled; }
         }
 
-        public struct Sync // dummy 
-        {
-            public bool sync;
-            public Sync() { }
-            public Sync(Sync o) { sync = o.sync; }
-        }
-
         private readonly Dictionary<uint, pEMP> _pEMPs = new();
+        
+        public IEnumerable<pEMP> pEMPs => _pEMPs.Values;
 
-        public const string CLIENT_SYNC_REQUEST_EVENT = "ClientSyncRequest";
-        public const string CLIENT_RECEIVE_SYNC_EVENT = "ClientSyncReceive";
-
-        private HashSet<InventorySlot> _processedSlot = new();
+        private HashSet<string> _processed = new();
 
         public void TogglepEMPState(uint pEMPIndex, bool enabled)
         {
@@ -73,6 +65,14 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             TogglepEMPState(pEMPIndex, enabled);
         }
 
+        private void pEMPInit()
+        {
+            //LevelAPI.OnBuildDone += SetupHUD;
+            //LevelAPI.OnBuildDone += SetupPlayerFlashLight;
+            //LevelAPI.OnBuildDone += SetupToolHandler;
+            Events.InventoryWielded += SetupAmmoWeaponHandlers;
+        }
+
         private void BuildpEMPs()
         {
             var expDef = ExpeditionDefinitionManager.Current.GetDefinition(ExpeditionDefinitionManager.Current.CurrentMainLevelLayout);
@@ -87,40 +87,79 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             }
         }
 
-        private void SetupGunSights(InventorySlot slot)
+        private void pEMPs_Clear()
         {
-            if(_processedSlot.Contains(slot)) return;
-            switch(slot)
+            _pEMPs.Clear();
+            _processed.Clear();
+        }
+        
+        internal void SetupHUD()
+        {
+            if(LocalPlayerAgent == null)
+            {
+                EOSLogger.Error($"{nameof(SetupHUD): LocalPlayerAgent is not set!}"); 
+                return;
+            }
+
+            if (_processed.Contains("HUD")) return;
+            LocalPlayerAgent.gameObject.AddComponent<EMPController>().AssignHandler(new EMPPlayerHudHandler());
+            EOSLogger.Log($"pEMP: PlayerHUD setup completed");
+            _processed.Add("HUD");
+        }
+
+        internal void SetupPlayerFlashLight()
+        {
+            if (LocalPlayerAgent == null)
+            {
+                EOSLogger.Error($"{nameof(SetupPlayerFlashLight): LocalPlayerAgent is not set!}");
+                return;
+            }
+
+            if (_processed.Contains("PlayerFlashLight")) return;
+            LocalPlayerAgent.gameObject.AddComponent<EMPController>().AssignHandler(new EMPPlayerFlashLightHandler());
+            EOSLogger.Log($"pEMP: PlayerFlashLight setup completed");
+            _processed.Add("PlayerFlashLight");
+        }
+
+        private void SetupAmmoWeaponHandlers(InventorySlot slot)
+        {
+            if(_processed.Contains(slot.ToString())) return;
+
+            void SetupAmmoWeaponHandlerForSlot(InventorySlot slot)
+            {
+                var backpack = PlayerBackpackManager.LocalBackpack;
+                if (backpack.TryGetBackpackItem(slot, out var backpackItem))
+                {
+                    if (backpackItem.Instance.gameObject.GetComponent<EMPController>() != null)
+                    {
+                        EOSLogger.Debug("Item already has controller, skipping...");
+                        return;
+                    }
+
+                    backpackItem.Instance.gameObject.AddComponent<EMPController>().AssignHandler(new EMPGunSightHandler());
+                }
+                else
+                {
+                    EOSLogger.Warning($"Couldn't get item for slot {slot}!");
+                }
+            }
+
+            switch (slot)
             {
                 case InventorySlot.GearStandard:
                 case InventorySlot.GearSpecial:
-                    SetupHandlerForSlot(slot);
-                    _processedSlot.Add(slot);
+                    SetupAmmoWeaponHandlerForSlot(slot);
                     break;
+                default: return;
             }
+            EOSLogger.Log($"pEMP: Backpack {slot} setup completed");
+            _processed.Add(slot.ToString());
         }
 
-        private void SetupHandlerForSlot(InventorySlot slot)
+        internal void SetupToolHandler()
         {
-            var backpack = PlayerBackpackManager.LocalBackpack;
-            if (backpack.TryGetBackpackItem(slot, out var backpackItem))
-            {
-                if (backpackItem.Instance.gameObject.GetComponent<EMPController>() != null)
-                {
-                    EOSLogger.Debug("Item already has controller, skipping...");
-                    return;
-                }
+            if (_processed.Contains(InventorySlot.GearClass.ToString())) return;
 
-                backpackItem.Instance.gameObject.AddComponent<EMPController>().AssignHandler(new EMPGunSightHandler());
-            }
-            else
-            {
-                EOSLogger.Warning($"Couldn't get item for slot {slot}!");
-            }
-        }
-
-        private void SetupToolHandler()
-        {
             var backpack = PlayerBackpackManager.LocalBackpack;
             if (backpack.TryGetBackpackItem(InventorySlot.GearClass, out var backpackItem))
             {
@@ -133,6 +172,8 @@ namespace ExtraObjectiveSetup.Expedition.EMP
                 if (backpackItem.Instance.GetComponent<EnemyScanner>() != null)
                 {
                     backpackItem.Instance.gameObject.AddComponent<EMPController>().AssignHandler(new EMPBioTrackerHandler());
+                    EOSLogger.Warning($"pEMP: Backpack {InventorySlot.GearClass} setup completed");
+                    _processed.Add(InventorySlot.GearClass.ToString());
                 }
             }
             else
@@ -141,44 +182,5 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             }
         }
 
-        internal void ClientSyncRequest()
-        {
-            if (SNet.IsMaster) return;
-            EOSLogger.Debug("pEMPState: Client requesting master to sync");
-            NetworkAPI.InvokeEvent(CLIENT_SYNC_REQUEST_EVENT, new Sync());
-        }
-
-        private void Master_ReceiveSyncRequest(ulong sender, Sync sync)
-        {
-            if (!SNet.IsMaster) return;
-            EOSLogger.Debug("pEMPState: Master received sync request");
-            CoroutineManager.StartCoroutine(MasterSync().WrapToIl2Cpp());
-        }
-
-        private System.Collections.IEnumerator MasterSync()
-        {
-            yield return new WaitForSeconds(0.25f); // this delay is prolly indispensable
-            foreach (uint pEMPIndex in _pEMPs.Keys)
-            {
-                var status = _pEMPs[pEMPIndex].State;
-                NetworkAPI.InvokeEvent(CLIENT_RECEIVE_SYNC_EVENT, new pEMPState()
-                {
-                    pEMPIndex = pEMPIndex,
-                    enabled = status == ActiveState.ENABLED
-                });
-                EOSLogger.Debug($"Syncing - pEMP_{pEMPIndex}, state: {status}");
-                yield return new WaitForSeconds(0.25f);
-            }
-        }
-
-        private void ClientReceivepEMPState(ulong sender, pEMPState state)
-        {
-            if (SNet.IsMaster) return;
-            EOSLogger.Error("pEMPState: Client Receive states from master");
-            EOSLogger.Warning($"pEMP_{state.pEMPIndex}, enabled? {state.enabled}");
-            TogglepEMPState(state.pEMPIndex, state.enabled);
-        }
-
-        public IEnumerable<pEMP> pEMPs => _pEMPs.Values;
     }
 }

@@ -26,7 +26,6 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
             LevelAPI.OnLevelCleanup += Clear;
         }
 
-
         private PlayerInventoryBase _inventory;
         private float _originalIntensity;
         private bool _originalFlashlightState;

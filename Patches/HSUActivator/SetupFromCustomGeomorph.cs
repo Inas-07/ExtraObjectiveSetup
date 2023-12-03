@@ -51,25 +51,23 @@ namespace ExtraObjectiveSetup.Patches.HSUActivator
                 EOSLogger.Error(">>>>>> HSUInsertSequenceDone!");
                 if (__instance.m_triggerExtractSequenceRoutine != null)
                     __instance.StopCoroutine(__instance.m_triggerExtractSequenceRoutine);
-                if (SNet.IsMaster)
-                {
-                    // activation scan is built OnBuildDone
-                    var activationScan = def.ChainedPuzzleOnActivationInstance;
-                    if (activationScan == null)
-                    {
-                        __instance.m_triggerExtractSequenceRoutine = __instance.StartCoroutine(__instance.TriggerRemoveSequence());
-                    }
-                    else
-                    {
-                        activationScan.OnPuzzleSolved += new System.Action(() => {
-                            __instance.StartCoroutine(__instance.TriggerRemoveSequence());
-                            def.EventsOnActivationScanSolved.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
-                        });
 
-                        if (SNet.IsMaster)
-                        {
-                            activationScan.AttemptInteract(ChainedPuzzles.eChainedPuzzleInteraction.Activate);
-                        }
+                // activation scan is built OnBuildDone
+                var activationScan = def.ChainedPuzzleOnActivationInstance;
+                if (activationScan == null)
+                {
+                    __instance.m_triggerExtractSequenceRoutine = __instance.StartCoroutine(__instance.TriggerRemoveSequence());
+                }
+                else
+                {
+                    activationScan.OnPuzzleSolved += new System.Action(() => {
+                        __instance.StartCoroutine(__instance.TriggerRemoveSequence());
+                        def.EventsOnActivationScanSolved.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
+                    });
+
+                    if (SNet.IsMaster)
+                    {
+                        activationScan.AttemptInteract(ChainedPuzzles.eChainedPuzzleInteraction.Activate);
                     }
                 }
             });

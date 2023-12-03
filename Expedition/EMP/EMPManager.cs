@@ -28,6 +28,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             PlayerpEMPComponent.Current = localPlayerAgent.gameObject.AddComponent<PlayerpEMPComponent>();
             LevelAPI.OnBuildStart += PlayerpEMPComponent.Current.Reset;
             LevelAPI.OnLevelCleanup += PlayerpEMPComponent.Current.Reset;
+            EOSLogger.Warning("LocalPlayerAgent setup completed");
         }
 
         public void AddTarget(EMPController target) => _empTargets.Add(target);
@@ -69,22 +70,18 @@ namespace ExtraObjectiveSetup.Expedition.EMP
         {
             _empTargets.Clear();
             _activeEMPShock.Clear();
-            _pEMPs.Clear();
-            _processedSlot.Clear();
             EMPHandler.Cleanup();
+            pEMPs_Clear();
         }
 
-        public void Init()
+        internal void Init()
         {
             EMPWardenEvents.Init();
 
             LevelAPI.OnBuildStart += () => { Clear(); BuildpEMPs(); };
             LevelAPI.OnLevelCleanup += Clear;
-
-            Events.EnterGSInLevel += SetupToolHandler;
-            Events.InventoryWielded += SetupGunSights;
+            pEMPInit();
         }
-
 
         public IEnumerable<EMPController> EMPTargets => _empTargets;
 

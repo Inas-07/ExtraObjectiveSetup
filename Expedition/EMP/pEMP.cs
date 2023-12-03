@@ -18,7 +18,7 @@ namespace ExtraObjectiveSetup.Expedition.EMP
 
         public void ChangeState(ActiveState newState)
         {
-            EOSLogger.Warning($"pEMP_{def.pEMPIndex} Change state: {State} -> {newState}");
+            EOSLogger.Debug($"pEMP_{def.pEMPIndex} Change state: {State} -> {newState}");
             State = newState;
             switch (State)
             {

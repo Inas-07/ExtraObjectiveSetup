@@ -26,7 +26,6 @@ namespace ExtraObjectiveSetup.Expedition.EMP.Handlers
 
         private EnemyScanner _scanner;
 
-
         public override void Setup(GameObject gameObject, EMPController controller)
         {
             base.Setup(gameObject, controller);

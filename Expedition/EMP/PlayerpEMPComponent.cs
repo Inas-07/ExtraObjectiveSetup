@@ -1,4 +1,5 @@
 ﻿using ExtraObjectiveSetup.Expedition.EMP.Handlers;
+using GTFO.API;
 using Player;
 using UnityEngine;
 
@@ -14,6 +15,15 @@ namespace ExtraObjectiveSetup.Expedition.EMP
  
         public bool InAnypEMP { get; private set; } = false;
 
+        private void CheckSetup()
+        {
+            if (EMPManager.Current.LocalPlayerAgent == null) return;
+
+            EMPManager.Current.SetupPlayerFlashLight();
+            EMPManager.Current.SetupHUD();
+            EMPManager.Current.SetupToolHandler();
+        }
+
         void Update()
         {
             if (GameStateManager.CurrentStateName != eGameStateName.InLevel) return;
@@ -21,6 +31,8 @@ namespace ExtraObjectiveSetup.Expedition.EMP
             if (!float.IsNaN(nextUpdateTime) && Clock.Time < nextUpdateTime) return;
 
             nextUpdateTime = Clock.Time + UPDATE_INTERVAL;
+
+            CheckSetup();
 
             var player = PlayerManager.GetLocalPlayerAgent();
             if( player == null ) 
