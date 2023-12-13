@@ -5,7 +5,7 @@ namespace ExtraObjectiveSetup.BaseClasses
 {
     public class BaseInstanceDefinition: GlobalZoneIndex
     {
-        [JsonPropertyOrder(-9)]
+        [JsonPropertyOrder(-8)]
         public uint InstanceIndex { get; set; } = uint.MaxValue;
 
         public override string ToString() => $"{GlobalZoneIndexTuple()}, Instance_{InstanceIndex}";
