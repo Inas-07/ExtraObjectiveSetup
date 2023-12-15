@@ -19,7 +19,7 @@ namespace ExtraObjectiveSetup.BaseClasses
 
         public string DEFINITION_PATH { get; private set; }
 
-        private void AddDefinitions(GenericExpeditionDefinition<T> definitions)
+        protected virtual void AddDefinitions(GenericExpeditionDefinition<T> definitions)
         {
             if (definitions == null) return;
 
@@ -31,7 +31,7 @@ namespace ExtraObjectiveSetup.BaseClasses
             this.definitions[definitions.MainLevelLayout] = definitions;
         }
 
-        private void FileChanged(LiveEditEventArgs e)
+        protected virtual void FileChanged(LiveEditEventArgs e)
         {
             EOSLogger.Warning($"LiveEdit File Changed: {e.FullPath}");
             LiveEdit.TryReadFileContent(e.FullPath, (content) =>

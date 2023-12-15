@@ -5,11 +5,11 @@ using ExtraObjectiveSetup.JSON;
 using ExtraObjectiveSetup.Expedition;
 using ExtraObjectiveSetup.Expedition.Gears;
 using ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup;
-using ExtraObjectiveSetup.Expedition.EMP;
 
 namespace ExtraObjectiveSetup
 {
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency("GTFO.FloLib", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOPartialDataUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(InjectLibUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
@@ -50,7 +50,6 @@ namespace ExtraObjectiveSetup
             ExpeditionDefinitionManager.Current.Init();
             ExpeditionGearManager.Current.Init();
             ExpeditionIGGroupManager.Current.Init();
-            EMPManager.Current.Init();
 
             Instances.GeneratorClusterInstanceManager.Current.Init();
             Instances.HSUActivatorInstanceManager.Current.Init();

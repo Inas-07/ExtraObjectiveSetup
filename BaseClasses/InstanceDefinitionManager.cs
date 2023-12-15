@@ -80,7 +80,7 @@ namespace ExtraObjectiveSetup.BaseClasses
         /// If additional operation is needed in subclasses, turn to `liveEditListener` instead.
         /// </summary>
         /// <param name="e">live edit args</param>
-        private void FileChanged(LiveEditEventArgs e)
+        protected virtual void FileChanged(LiveEditEventArgs e)
         {
             EOSLogger.Warning($"LiveEdit File Changed: {e.FullPath}");
             LiveEdit.TryReadFileContent(e.FullPath, (content) =>
