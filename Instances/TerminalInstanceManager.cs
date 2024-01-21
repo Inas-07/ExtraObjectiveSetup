@@ -11,7 +11,7 @@ namespace ExtraObjectiveSetup.Instances
     {
         public static TerminalInstanceManager Current { get; private set; } = new();
 
-        public override (eDimensionIndex, LG_LayerType, eLocalZoneIndex) GetGlobalZoneIndex(LG_ComputerTerminal instance)
+        public override (eDimensionIndex dim, LG_LayerType layer, eLocalZoneIndex zone) GetGlobalZoneIndex(LG_ComputerTerminal instance)
         {
             if(instance.SpawnNode == null)
             {

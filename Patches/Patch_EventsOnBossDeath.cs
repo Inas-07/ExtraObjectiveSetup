@@ -50,6 +50,8 @@ namespace ExtraObjectiveSetup.Patches
 
             enemy.add_OnDeadCallback(new System.Action(() =>
             {
+                if (GameStateManager.CurrentStateName != eGameStateName.InLevel) return;
+
                 ushort enemyID = enemy.GlobalID;
                 if (ExecutedForInstances.Contains(enemyID))
                 {

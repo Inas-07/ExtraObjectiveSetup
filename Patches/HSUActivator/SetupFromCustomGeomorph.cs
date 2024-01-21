@@ -56,12 +56,18 @@ namespace ExtraObjectiveSetup.Patches.HSUActivator
                 var activationScan = def.ChainedPuzzleOnActivationInstance;
                 if (activationScan == null)
                 {
-                    __instance.m_triggerExtractSequenceRoutine = __instance.StartCoroutine(__instance.TriggerRemoveSequence());
+                    if (def.TakeOutItemAfterActivation)
+                    {
+                        __instance.m_triggerExtractSequenceRoutine = __instance.StartCoroutine(__instance.TriggerRemoveSequence());
+                    }
                 }
                 else
                 {
                     activationScan.OnPuzzleSolved += new System.Action(() => {
-                        __instance.StartCoroutine(__instance.TriggerRemoveSequence());
+                        if (def.TakeOutItemAfterActivation)
+                        {
+                            __instance.m_triggerExtractSequenceRoutine = __instance.StartCoroutine(__instance.TriggerRemoveSequence());
+                        }
                         def.EventsOnActivationScanSolved.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
                     });
 

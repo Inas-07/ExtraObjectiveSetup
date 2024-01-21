@@ -43,7 +43,7 @@ namespace ExtraObjectiveSetup.BaseClasses
 
         public GenericExpeditionDefinition<T> GetDefinition(uint MainLevelLayout) => definitions.ContainsKey(MainLevelLayout) ? definitions[MainLevelLayout] : null;
 
-        public void Init() { }
+        public virtual void Init() { }
 
         public GenericExpeditionDefinitionManager()
         {

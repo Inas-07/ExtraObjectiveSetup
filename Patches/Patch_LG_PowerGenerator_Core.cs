@@ -4,6 +4,8 @@ using ExtraObjectiveSetup.Utils;
 using GameData;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.Objectives.IndividualGenerator;
+using SNetwork;
+using Player;
 
 namespace ExtraObjectiveSetup.Patches
 {
@@ -14,6 +16,20 @@ namespace ExtraObjectiveSetup.Patches
         [HarmonyPatch(typeof(LG_PowerGenerator_Core), nameof(LG_PowerGenerator_Core.Setup))]
         private static void Post_PowerGenerator_Setup(LG_PowerGenerator_Core __instance)
         {
+            // do some minor vanilla bug fix
+            __instance.m_powerCellInteraction.AttemptCarryItemInsert += new System.Action<SNet_Player, Item>((p, item) => {
+
+                if (PlayerBackpackManager.TryGetItemInLevelFromItemData(item.Get_pItemData(), out var itemInLevel))
+                {
+                    var cell = itemInLevel.Cast<ItemInLevel>();
+                    cell.CanWarp = false;
+                }
+                else
+                {
+                    EOSLogger.Error($"Inserting sth other than PowerCell ({item.PublicName}) into {__instance.m_itemKey}, how?");
+                }
+            }); 
+
             if (PowerGeneratorInstanceManager.Current.IsGCGenerator(__instance)) return;
 
             uint zoneInstanceIndex = PowerGeneratorInstanceManager.Current.Register(__instance);

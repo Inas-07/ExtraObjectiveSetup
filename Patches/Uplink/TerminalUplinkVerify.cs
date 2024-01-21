@@ -50,7 +50,6 @@ namespace ExtraObjectiveSetup.Patches.Uplink
                         int j = uplinkConfig.RoundOverrides.FindIndex(o => o.RoundIndex == newRoundIndex);
                         UplinkRound newRoundOverride = j != -1 ? uplinkConfig.RoundOverrides[j] : null;
 
-
                         roundOverride?.EventsOnRound.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.OnMid, false));
 
                         if (roundOverride != null && roundOverride.ChainedPuzzleToEndRoundInstance != null)
@@ -71,6 +70,7 @@ namespace ExtraObjectiveSetup.Patches.Uplink
                                     EOSLogger.Log("UPLINK VERIFICATION GO TO NEXT ROUND!");
                                     uplinkPuzzle.CurrentRound.ShowGui = true;
                                     newRoundOverride?.EventsOnRound.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.OnStart, false));
+                                    UplinkObjectiveManager.Current.ChangeState(__instance.m_terminal, new() { Status = UplinkStatus.InProgress, CurrentRoundIndex = uplinkPuzzle.m_roundIndex });
                                 });
                             });
 
@@ -90,6 +90,7 @@ namespace ExtraObjectiveSetup.Patches.Uplink
                                 EOSLogger.Log("UPLINK VERIFICATION GO TO NEXT ROUND!");
                                 uplinkPuzzle.CurrentRound.ShowGui = true;
                                 newRoundOverride?.EventsOnRound.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.OnStart, false));
+                                UplinkObjectiveManager.Current.ChangeState(__instance.m_terminal, new() { Status = UplinkStatus.InProgress, CurrentRoundIndex = uplinkPuzzle.m_roundIndex });
                             });
                         }
                     }
@@ -117,6 +118,7 @@ namespace ExtraObjectiveSetup.Patches.Uplink
 
                                         // Tested, it's save to do this
                                         uplinkPuzzle.OnPuzzleSolved?.Invoke();
+                                        UplinkObjectiveManager.Current.ChangeState(__instance.m_terminal, new() { Status = UplinkStatus.Finished, CurrentRoundIndex = uplinkPuzzle.m_roundIndex });
                                     });
                                 });
 
@@ -134,8 +136,8 @@ namespace ExtraObjectiveSetup.Patches.Uplink
                                 LG_ComputerTerminalManager.OngoingUplinkConnectionTerminalId = 0U;
                                 uplinkPuzzle.Solved = true;
 
-                                // Tested, it's save to do this
-                                uplinkPuzzle.OnPuzzleSolved?.Invoke(); // EventsOnComplete and other stuff
+                                uplinkPuzzle.OnPuzzleSolved?.Invoke(); 
+                                UplinkObjectiveManager.Current.ChangeState(__instance.m_terminal, new() { Status = UplinkStatus.Finished, CurrentRoundIndex = uplinkPuzzle.m_roundIndex });
                             }
                         });
                     }

@@ -5,6 +5,7 @@ using GameData;
 using UnityEngine;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.BaseClasses;
+using System.Collections.Generic;
 
 namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 {
@@ -20,6 +21,8 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
             Sort(definitions);
             base.AddDefinitions(definitions);
         }
+
+        private List<HSUActivatorDefinition> builtHSUActivatorPuzzles = new();
 
         private void BuildHSUActivatorChainedPuzzle(HSUActivatorDefinition config)
         {
@@ -68,6 +71,8 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
                         instance.SpawnNode.m_area.transform);
 
                     config.ChainedPuzzleOnActivationInstance = puzzleInstance;
+
+                    builtHSUActivatorPuzzles.Add(config);
                     EOSLogger.Debug($"HSUActivator: ChainedPuzzleOnActivation ID: {config.ChainedPuzzleOnActivation} specified and created");
                 }
             }
@@ -81,8 +86,11 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 
         private void OnLevelCleanup()
         {
-            if (!definitions.ContainsKey(RundownManager.ActiveExpedition.LevelLayoutData)) return;
-            definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(def => { def.ChainedPuzzleOnActivationInstance = null; });
+            //if (!definitions.ContainsKey(RundownManager.ActiveExpedition.LevelLayoutData)) return;
+            //definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(def => { def.ChainedPuzzleOnActivationInstance = null; });
+
+            builtHSUActivatorPuzzles.ForEach(h => { h.ChainedPuzzleOnActivationInstance = null; });
+            builtHSUActivatorPuzzles.Clear();
         }
 
         static HSUActivatorObjectiveManager()

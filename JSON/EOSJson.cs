@@ -22,7 +22,8 @@ namespace ExtraObjectiveSetup.JSON
         static EOSJson()
         {
             _setting.Converters.Add(new JsonStringEnumConverter());
-            if(MTFOPartialDataUtil.IsLoaded)
+            _setting.Converters.Add(new MyVector3Converter());
+            if (MTFOPartialDataUtil.IsLoaded)
             {
                 _setting.Converters.Add(MTFOPartialDataUtil.PersistentIDConverter);
                 _setting.Converters.Add(MTFOPartialDataUtil.LocalizedTextConverter);

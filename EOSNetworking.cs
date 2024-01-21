@@ -13,7 +13,7 @@ namespace ExtraObjectiveSetup
         public const uint REPLICATOR_ID_START = 10000u;
 
         private static uint currentForeverID = FOREVER_REPLICATOR_ID_START;
-        
+
         private static uint currentID = REPLICATOR_ID_START;
 
         private static HashSet<uint> foreverUsedIDs = new();
@@ -22,10 +22,10 @@ namespace ExtraObjectiveSetup
 
         public static uint AllotReplicatorID()
         {
-            while(currentID >= REPLICATOR_ID_START // prevent overflow
+            while (currentID >= REPLICATOR_ID_START // prevent overflow
                 && usedIDs.Contains(currentID))
                 currentID += 1;
-            
+
             if (currentID < REPLICATOR_ID_START)
             {
                 EOSLogger.Error("Replicator ID depleted. How?");
@@ -42,7 +42,7 @@ namespace ExtraObjectiveSetup
 
         public static uint AllotForeverReplicatorID()
         {
-            while (currentForeverID < REPLICATOR_ID_START 
+            while (currentForeverID < REPLICATOR_ID_START
                 && foreverUsedIDs.Contains(currentForeverID))
                 currentForeverID += 1;
 

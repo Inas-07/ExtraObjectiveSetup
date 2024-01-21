@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace ExtraObjectiveSetup.Expedition.Gears
 {
-    internal class ExpeditionGearManager
+    public class ExpeditionGearManager
     {
         public static ExpeditionGearManager Current { get; private set; } = new();
 
@@ -103,14 +103,12 @@ namespace ExtraObjectiveSetup.Expedition.Gears
             expDef.ExpeditionGears.GearIds.ForEach(id => GearIds.Add(id));
         }
 
-        public void SetupAllowedGearsForActiveExpedition()
+        internal void SetupAllowedGearsForActiveExpedition()
         {
             ConfigExpeditionGears();
             ClearLoadedGears();
             AddGearForCurrentExpedition();
             ResetPlayerSelectedGears();
-
-
         }
 
         public void Init() { }

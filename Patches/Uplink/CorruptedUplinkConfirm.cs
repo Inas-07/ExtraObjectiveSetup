@@ -40,7 +40,10 @@ namespace ExtraObjectiveSetup.Patches.Uplink
             // vanilla code in this part is totally brain-dead
             if (sender.ChainedPuzzleForWardenObjective != null)
             {
-                sender.ChainedPuzzleForWardenObjective.OnPuzzleSolved += new System.Action(() => receiver.m_command.StartTerminalUplinkSequence(string.Empty, true));
+                sender.ChainedPuzzleForWardenObjective.OnPuzzleSolved += new System.Action(() => {
+                    receiver.m_command.StartTerminalUplinkSequence(string.Empty, true);
+                    UplinkObjectiveManager.Current.ChangeState(sender, new() { Status = UplinkStatus.InProgress, CurrentRoundIndex = 0 });
+                });
                 sender.m_command.AddOutput("");
                 sender.m_command.AddOutput(Text.Get(3268596368));
                 sender.m_command.AddOutput(Text.Get(2277987284));
@@ -57,6 +60,7 @@ namespace ExtraObjectiveSetup.Patches.Uplink
             else
             {
                 receiver.m_command.StartTerminalUplinkSequence(string.Empty, true);
+                UplinkObjectiveManager.Current.ChangeState(sender, new() { Status = UplinkStatus.InProgress, CurrentRoundIndex = 0 });
             }
 
             __result = true;

@@ -82,7 +82,7 @@ namespace ExtraObjectiveSetup.BaseClasses
         /// <param name="globalZoneIndex"></param>
         /// <param name="instanceIndex"></param>
         /// <returns></returns>
-        public T GetInstance((eDimensionIndex, LG_LayerType, eLocalZoneIndex) globalZoneIndex, uint instanceIndex)
+        public T GetInstance((eDimensionIndex dim, LG_LayerType layer, eLocalZoneIndex zone) globalZoneIndex, uint instanceIndex)
         {
             if (!index2Instance.ContainsKey(globalZoneIndex)) return default;
 
@@ -93,7 +93,7 @@ namespace ExtraObjectiveSetup.BaseClasses
 
         public T GetInstance(eDimensionIndex dimensionIndex, LG_LayerType layerType, eLocalZoneIndex localIndex, uint instanceIndex) => GetInstance((dimensionIndex, layerType, localIndex), instanceIndex);
 
-        public List<T> GetInstancesInZone((eDimensionIndex, LG_LayerType, eLocalZoneIndex) globalZoneIndex) => index2Instance.ContainsKey(globalZoneIndex) ? index2Instance[globalZoneIndex] : null;
+        public List<T> GetInstancesInZone((eDimensionIndex dim, LG_LayerType layer, eLocalZoneIndex zone) globalZoneIndex) => index2Instance.ContainsKey(globalZoneIndex) ? index2Instance[globalZoneIndex] : null;
 
         public List<T> GetInstancesInZone(eDimensionIndex dimensionIndex, LG_LayerType layerType, eLocalZoneIndex localIndex) => GetInstancesInZone((dimensionIndex, layerType, localIndex));
 
@@ -105,7 +105,7 @@ namespace ExtraObjectiveSetup.BaseClasses
             return instances2Index[globalZoneIndex].ContainsKey(instance.Pointer);
         }
 
-        public IEnumerable<(eDimensionIndex, LG_LayerType, eLocalZoneIndex)> RegisteredZones() => index2Instance.Keys;
+        public IEnumerable<(eDimensionIndex dim, LG_LayerType layer, eLocalZoneIndex zone)> RegisteredZones() => index2Instance.Keys;
 
         /// <summary>
         /// Clear all registered instances.
@@ -119,7 +119,7 @@ namespace ExtraObjectiveSetup.BaseClasses
 
         public virtual void Init() { }
 
-        public abstract (eDimensionIndex, LG_LayerType, eLocalZoneIndex) GetGlobalZoneIndex(T instance);
+        public abstract (eDimensionIndex dim, LG_LayerType layer, eLocalZoneIndex zone) GetGlobalZoneIndex(T instance);
 
         public InstanceManager()
         {
