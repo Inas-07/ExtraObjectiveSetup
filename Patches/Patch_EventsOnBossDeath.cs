@@ -40,17 +40,17 @@ namespace ExtraObjectiveSetup.Patches
             if (!(spawnData.mode == Agents.AgentMode.Hibernate && def.ApplyToHibernate || spawnData.mode == Agents.AgentMode.Agressive && def.ApplyToWave)) return;
 
             var mode = spawnData.mode == Agents.AgentMode.Hibernate ? BossDeathEventManager.Mode.HIBERNATE : BossDeathEventManager.Mode.WAVE;
-            BossDeathEventManager.Current.RegisterInLevelBDEventsExecution(def, mode);
-
-            if(!BossDeathEventManager.Current.TryConsumeBDEventsExecutionTimes(def, mode))
-            {
-                EOSLogger.Debug($"EventsOnBossDeath: execution times depleted for {def.GlobalZoneIndexTuple()}, {mode}");
-                return;
-            }
+            //BossDeathEventManager.Current.RegisterInLevelBDEventsExecution(def, mode);
 
             enemy.add_OnDeadCallback(new System.Action(() =>
             {
                 if (GameStateManager.CurrentStateName != eGameStateName.InLevel) return;
+
+                if (!BossDeathEventManager.Current.TryConsumeBDEventsExecutionTimes(def, mode))
+                {
+                    EOSLogger.Debug($"EventsOnBossDeath: execution times depleted for {def.GlobalZoneIndexTuple()}, {mode}");
+                    return;
+                }
 
                 ushort enemyID = enemy.GlobalID;
                 if (ExecutedForInstances.Contains(enemyID))
