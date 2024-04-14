@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using MTFO.API;
 using ExtraObjectiveSetup.Utils;
 using ExtraObjectiveSetup.JSON;
+using GTFO.API;
 
 namespace ExtraObjectiveSetup.Expedition
 {

@@ -4,6 +4,8 @@ using ExtraObjectiveSetup.BaseClasses.CustomTerminalDefinition;
 using GameData;
 using GTFO.API.Extensions;
 using Localization;
+using UnityEngine;
+
 namespace ExtraObjectiveSetup.Utils
 {
     public static partial class EOSTerminalUtils
@@ -31,7 +33,27 @@ namespace ExtraObjectiveSetup.Utils
                     ChainedPuzzleDataBlock block = GameDataBlockBase<ChainedPuzzleDataBlock>.GetBlock(e.ChainPuzzle);
                     if (block != null)
                     {
-                        ChainedPuzzleInstance puzzleInstance = ChainedPuzzleManager.CreatePuzzleInstance(block, terminal.SpawnNode.m_area, terminal.m_wardenObjectiveSecurityScanAlign.position, terminal.m_wardenObjectiveSecurityScanAlign, e.UseStaticBioscanPoints);
+                        LG_Area sourceArea;
+                        Transform transform;
+                        if (terminal.SpawnNode != null)
+                        {
+                            sourceArea = terminal.SpawnNode.m_area;
+                            transform = terminal.m_wardenObjectiveSecurityScanAlign;
+                        }
+                        else
+                        {
+                            sourceArea = terminal.ConnectedReactor?.SpawnNode?.m_area ?? null;
+                            transform = terminal.ConnectedReactor?.m_chainedPuzzleAlign ?? null;
+                        }
+
+                        if (sourceArea == null)
+                        {
+                            EOSLogger.Error($"Terminal Source Area is not found! Cannot create chained puzzle for command {cmd.Command}!");
+                            continue;
+                        }
+
+                        ChainedPuzzleInstance puzzleInstance = ChainedPuzzleManager.CreatePuzzleInstance(block, sourceArea, transform.position, transform, e.UseStaticBioscanPoints);
+
                         var events = cmd.CommandEvents.GetRange(i, cmd.CommandEvents.Count - i).ToIl2Cpp(); 
                         puzzleInstance.OnPuzzleSolved += new System.Action(() => {
                             WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(events, eWardenObjectiveEventTrigger.None, true);

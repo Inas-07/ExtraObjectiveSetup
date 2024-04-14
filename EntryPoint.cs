@@ -19,7 +19,7 @@ namespace ExtraObjectiveSetup
     {
         public const string AUTHOR = "Inas";
         public const string PLUGIN_NAME = "ExtraObjectiveSetup";
-        public const string VERSION = "1.4.6";
+        public const string VERSION = "1.5.0";
 
         private Harmony m_Harmony;
         
@@ -55,6 +55,8 @@ namespace ExtraObjectiveSetup
             Instances.HSUActivatorInstanceManager.Current.Init();
             Instances.PowerGeneratorInstanceManager.Current.Init();
             Instances.TerminalInstanceManager.Current.Init();
+
+            Objectives.ObjectiveCounter.ObjectiveCounterManager.Current.Init();
         }
     }
 }
