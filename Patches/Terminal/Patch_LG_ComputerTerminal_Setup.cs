@@ -4,10 +4,10 @@ using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.Tweaks.TerminalPosition;
 using ExtraObjectiveSetup.Utils;
 
-namespace ExtraObjectiveSetup.Patches
+namespace ExtraObjectiveSetup.Patches.Terminal
 {
     [HarmonyPatch]
-    internal class Patch_LG_ComputerTerminal_Setup
+    internal static class Patch_LG_ComputerTerminal_Setup
     {
         [HarmonyPostfix]
         [HarmonyPatch(typeof(LG_ComputerTerminal), nameof(LG_ComputerTerminal.Setup))]

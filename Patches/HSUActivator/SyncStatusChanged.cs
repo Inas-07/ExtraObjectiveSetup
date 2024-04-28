@@ -4,6 +4,7 @@ using ExtraObjectiveSetup.Utils;
 using GameData;
 using ExtraObjectiveSetup.Objectives.ActivateSmallHSU;
 using ExtraObjectiveSetup.Instances;
+using SNetwork;
 
 namespace ExtraObjectiveSetup.Patches.HSUActivator
 {
@@ -12,11 +13,10 @@ namespace ExtraObjectiveSetup.Patches.HSUActivator
     {
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LG_HSUActivator_Core), nameof(LG_HSUActivator_Core.SyncStatusChanged))]
-        private static bool Pre_LG_HSUActivator_Core_SyncStatusChanged(LG_HSUActivator_Core __instance, ref pHSUActivatorState newState, bool isRecall)
+        private static bool Pre_LG_HSUActivator_Core_SyncStatusChanged(LG_HSUActivator_Core __instance, pHSUActivatorState newState, bool isRecall)
         {
             if (__instance.m_isWardenObjective) return true;
             
-
             uint index = HSUActivatorInstanceManager.Current.GetZoneInstanceIndex(__instance);
             if (index == uint.MaxValue)
             {
@@ -40,21 +40,31 @@ namespace ExtraObjectiveSetup.Patches.HSUActivator
                     __instance.m_insertHSUInteraction.SetActive(true);
                     __instance.ResetItem(__instance.m_itemGoingInAlign, __instance.m_linkedItemGoingIn, false, false, true, ref goingInVisibleForPostCulling);
                     __instance.ResetItem(__instance.m_itemComingOutAlign, __instance.m_linkedItemComingOut, false, false, true, ref comingOutVisibleForPostCulling);
-                    __instance.m_sequencerWaitingForItem.StartSequence();
+                    __instance.m_sequencerWaitingForItem.StartSequence();                    
                     __instance.m_sequencerInsertItem.StopSequence();
                     __instance.m_sequencerExtractItem.StopSequence();
                     __instance.m_sequencerExtractionDone.StopSequence();
+
                     break;
                 
-                case eHSUActivatorStatus.Inserting:
+                case eHSUActivatorStatus.Inserting:    
                     __instance.m_insertHSUInteraction.SetActive(false);
                     __instance.ResetItem(__instance.m_itemGoingInAlign, __instance.m_linkedItemGoingIn, true, false, true, ref goingInVisibleForPostCulling);
                     __instance.ResetItem(__instance.m_itemComingOutAlign, __instance.m_linkedItemComingOut, false, false, true, ref comingOutVisibleForPostCulling);
                     __instance.m_sequencerWaitingForItem.StopSequence();
-                    __instance.m_sequencerInsertItem.StartSequence();
+                    if (!isRecall)
+                    {
+                        __instance.m_sequencerInsertItem.StartSequence();
+                        def.EventsOnHSUActivation.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
+                        var activationScan = def.ChainedPuzzleOnActivationInstance;
+                        if (SNet.IsMaster && activationScan != null)
+                        {
+                            def.ChainedPuzzleOnActivationInstance.AttemptInteract(ChainedPuzzles.eChainedPuzzleInteraction.Activate);
+                        }
+                    }
+
                     __instance.m_sequencerExtractItem.StopSequence();
                     __instance.m_sequencerExtractionDone.StopSequence();
-                    def?.EventsOnHSUActivation.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
                     break;
 
                 case eHSUActivatorStatus.Extracting:
@@ -75,6 +85,7 @@ namespace ExtraObjectiveSetup.Patches.HSUActivator
                     __instance.m_sequencerInsertItem.StopSequence();
                     __instance.m_sequencerExtractItem.StopSequence();
                     __instance.m_sequencerExtractionDone.StartSequence();
+                    
                     if (newState.isSequenceIncomplete)
                     {
                         __instance.HSUInsertSequenceDone();

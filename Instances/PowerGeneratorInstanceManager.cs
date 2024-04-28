@@ -13,13 +13,15 @@ namespace ExtraObjectiveSetup.Instances
     {
         public static PowerGeneratorInstanceManager Current { get; private set; } = new();
 
-        private HashSet<IntPtr> gcGenerators = new();
+        //private HashSet<IntPtr> gcGenerators = new();
+
+        private Dictionary<IntPtr, LG_PowerGeneratorCluster> gcGenerators = new();
 
         public override (eDimensionIndex, LG_LayerType, eLocalZoneIndex) GetGlobalZoneIndex(LG_PowerGenerator_Core instance) => (instance.SpawnNode.m_dimension.DimensionIndex, instance.SpawnNode.LayerType, instance.SpawnNode.m_zone.LocalIndex);
 
         public override uint Register((eDimensionIndex, LG_LayerType, eLocalZoneIndex) globalZoneIndex, LG_PowerGenerator_Core instance) 
         { 
-            if(gcGenerators.Contains(instance.Pointer))
+            if(gcGenerators.ContainsKey(instance.Pointer))
             {
                 EOSLogger.Error("PowerGeneratorInstanceManager: Trying to register a GC Generator, which is an invalid operation");
                 return INVALID_INSTANCE_INDEX;
@@ -32,19 +34,21 @@ namespace ExtraObjectiveSetup.Instances
         /// Mark the yet setup-ed LG_PowerGenerator_Core as a generator spawned with a generator cluster.
         /// These generator instance will not be registered 
         /// </summary>
-        /// <param name="instance">The unsetuped LG_PowerGenerator_Core instance.</param>
-        public void MarkAsGCGenerator(LG_PowerGenerator_Core instance)
+        /// <param name="child">The unsetuped LG_PowerGenerator_Core instance.</param>
+        public void MarkAsGCGenerator(LG_PowerGeneratorCluster parent, LG_PowerGenerator_Core child)
         {
-            if(IsRegistered(instance))
+            if(IsRegistered(child))
             {
                 EOSLogger.Error("PowerGeneratorInstanceManager: Trying to mark a registered Generator as GC Generator, which is an invalid operation");
                 return;
             }
 
-            gcGenerators.Add(instance.Pointer);
+            gcGenerators[child.Pointer] = parent;
         }
 
-        public bool IsGCGenerator(LG_PowerGenerator_Core instance) => gcGenerators.Contains(instance.Pointer);
+        public bool IsGCGenerator(LG_PowerGenerator_Core instance) => gcGenerators.ContainsKey(instance.Pointer);
+
+        public LG_PowerGeneratorCluster GetParentGeneratorCluster(LG_PowerGenerator_Core instance) => gcGenerators.TryGetValue(instance.Pointer, out var gc) ? gc : null;
 
         private void OutputLevelInstanceInfo()
         {

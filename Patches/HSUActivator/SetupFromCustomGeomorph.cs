@@ -6,6 +6,7 @@ using SNetwork;
 using Player;
 using ExtraObjectiveSetup.Objectives.ActivateSmallHSU;
 using ExtraObjectiveSetup.Instances;
+using System;
 
 namespace ExtraObjectiveSetup.Patches.HSUActivator
 {
@@ -50,31 +51,8 @@ namespace ExtraObjectiveSetup.Patches.HSUActivator
                 __instance.m_stateReplicator.SetStateUnsynced(state);
                 EOSLogger.Error(">>>>>> HSUInsertSequenceDone!");
                 if (__instance.m_triggerExtractSequenceRoutine != null)
+                {
                     __instance.StopCoroutine(__instance.m_triggerExtractSequenceRoutine);
-
-                // activation scan is built OnBuildDone
-                var activationScan = def.ChainedPuzzleOnActivationInstance;
-                if (activationScan == null)
-                {
-                    if (def.TakeOutItemAfterActivation)
-                    {
-                        __instance.m_triggerExtractSequenceRoutine = __instance.StartCoroutine(__instance.TriggerRemoveSequence());
-                    }
-                }
-                else
-                {
-                    activationScan.OnPuzzleSolved += new System.Action(() => {
-                        if (def.TakeOutItemAfterActivation)
-                        {
-                            __instance.m_triggerExtractSequenceRoutine = __instance.StartCoroutine(__instance.TriggerRemoveSequence());
-                        }
-                        def.EventsOnActivationScanSolved.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
-                    });
-
-                    if (SNet.IsMaster)
-                    {
-                        activationScan.AttemptInteract(ChainedPuzzles.eChainedPuzzleInteraction.Activate);
-                    }
                 }
             });
 

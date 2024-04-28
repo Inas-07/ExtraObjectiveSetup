@@ -10,7 +10,7 @@ using Localization;
 namespace ExtraObjectiveSetup.Patches.Uplink
 {
     [HarmonyPatch]
-    internal class CorruptedUplinkConfirm
+    internal static class CorruptedUplinkConfirm
     {
         // rewrite the method to do more things
         [HarmonyPrefix]

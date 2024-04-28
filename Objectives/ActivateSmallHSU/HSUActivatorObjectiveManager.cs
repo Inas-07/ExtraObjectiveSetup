@@ -6,6 +6,7 @@ using UnityEngine;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.BaseClasses;
 using System.Collections.Generic;
+using System;
 
 namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 {
@@ -22,42 +23,45 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
             base.AddDefinitions(definitions);
         }
 
-        private List<HSUActivatorDefinition> builtHSUActivatorPuzzles = new();
+        //private List<HSUActivatorDefinition> builtHSUActivatorPuzzles = new();
 
-        private void BuildHSUActivatorChainedPuzzle(HSUActivatorDefinition config)
+        // key: ChainedPuzzleInstance.Pointer
+        private Dictionary<IntPtr, HSUActivatorDefinition> m_HSUActivatorPuzzles = new();
+
+        private void BuildHSUActivatorChainedPuzzle(HSUActivatorDefinition def)
         {
-            var instance = HSUActivatorInstanceManager.Current.GetInstance(config.DimensionIndex, config.LayerType, config.LocalIndex, config.InstanceIndex);
+            var instance = HSUActivatorInstanceManager.Current.GetInstance(def.DimensionIndex, def.LayerType, def.LocalIndex, def.InstanceIndex);
             if (instance == null)
             {
-                EOSLogger.Error($"Found unused HSUActivator config: {(config.DimensionIndex, config.LayerType, config.LocalIndex, config.InstanceIndex)}");
+                EOSLogger.Error($"Found unused HSUActivator config: {(def.DimensionIndex, def.LayerType, def.LocalIndex, def.InstanceIndex)}");
                 return;
             }
 
-            if (config.RequireItemAfterActivationInExitScan == true)
+            if (def.RequireItemAfterActivationInExitScan == true)
             {
                 instance.m_sequencerExtractionDone.OnSequenceDone += new System.Action(() => {
                     WardenObjectiveManager.AddObjectiveItemAsRequiredForExitScan(true, new iWardenObjectiveItem[1] { new iWardenObjectiveItem(instance.m_linkedItemComingOut.Pointer) });
-                    EOSLogger.Debug($"HSUActivator: {(config.DimensionIndex, config.LayerType, config.LocalIndex, config.InstanceIndex)} - added required item for extraction scan");
+                    EOSLogger.Debug($"HSUActivator: {(def.DimensionIndex, def.LayerType, def.LocalIndex, def.InstanceIndex)} - added required item for extraction scan");
                 });
             }
 
-            if (config.TakeOutItemAfterActivation)
+            if (def.TakeOutItemAfterActivation)
             {
                 instance.m_sequencerExtractionDone.OnSequenceDone += new System.Action(() => {
                     instance.LinkedItemComingOut.m_navMarkerPlacer.SetMarkerVisible(true);
                 });
             }
 
-            if (config.ChainedPuzzleOnActivation != 0)
+            if (def.ChainedPuzzleOnActivation != 0)
             {
-                var block = GameDataBlockBase<ChainedPuzzleDataBlock>.GetBlock(config.ChainedPuzzleOnActivation);
+                var block = GameDataBlockBase<ChainedPuzzleDataBlock>.GetBlock(def.ChainedPuzzleOnActivation);
                 if (block == null)
                 {
                     EOSLogger.Error($"HSUActivator: ChainedPuzzleOnActivation is specified but ChainedPuzzleDatablock definition is not found, won't build");
                 }
                 else
                 {
-                    Vector3 startPosition = config.ChainedPuzzleStartPosition.ToVector3();
+                    Vector3 startPosition = def.ChainedPuzzleStartPosition.ToVector3();
 
                     if (startPosition == Vector3.zeroVector)
                     {
@@ -70,10 +74,22 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
                         startPosition,
                         instance.SpawnNode.m_area.transform);
 
-                    config.ChainedPuzzleOnActivationInstance = puzzleInstance;
+                    def.ChainedPuzzleOnActivationInstance = puzzleInstance;
 
-                    builtHSUActivatorPuzzles.Add(config);
-                    EOSLogger.Debug($"HSUActivator: ChainedPuzzleOnActivation ID: {config.ChainedPuzzleOnActivation} specified and created");
+                    m_HSUActivatorPuzzles[puzzleInstance.Pointer] = def;
+
+                    // PuzzleInstance will be activated in SyncStateChanged
+                    // EventsOnActivationScanSolved and HSU removeSequence will be executed in 
+                    // ChainedPuzzleInstance.OnStateChanged(patch ChainedPuzzleInstance_OnPuzzleSolved)
+
+                    EOSLogger.Debug($"HSUActivator: ChainedPuzzleOnActivation ID: {def.ChainedPuzzleOnActivation} specified and created");
+                }
+            }
+            else
+            {
+                if (def.TakeOutItemAfterActivation)
+                {
+                    instance.m_triggerExtractSequenceRoutine = instance.StartCoroutine(instance.TriggerRemoveSequence());
                 }
             }
         }
@@ -88,10 +104,15 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
         {
             //if (!definitions.ContainsKey(RundownManager.ActiveExpedition.LevelLayoutData)) return;
             //definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(def => { def.ChainedPuzzleOnActivationInstance = null; });
+            foreach(var h in m_HSUActivatorPuzzles.Values)
+            {
+                h.ChainedPuzzleOnActivationInstance = null;
+            }
 
-            builtHSUActivatorPuzzles.ForEach(h => { h.ChainedPuzzleOnActivationInstance = null; });
-            builtHSUActivatorPuzzles.Clear();
+            m_HSUActivatorPuzzles.Clear();
         }
+
+        internal HSUActivatorDefinition GetHSUActivatorDefinition(ChainedPuzzleInstance chainedPuzzle) => m_HSUActivatorPuzzles.TryGetValue(chainedPuzzle.Pointer, out var def) ? def : null;
 
         static HSUActivatorObjectiveManager()
         {

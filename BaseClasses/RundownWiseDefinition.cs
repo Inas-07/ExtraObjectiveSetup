@@ -2,9 +2,9 @@
 
 namespace ExtraObjectiveSetup.BaseClasses
 {
-    public class GenericExpeditionDefinition<T> where T : new()
+    public class RundownWiseDefinition<T> where T : new()
     {
-        public uint MainLevelLayout { get; set; } = 0u;
+        public int RundownID { get; set; } = -1; // RundownWiseDefinitionManager.INVALID_RUNDOWN_ID
 
         public List<T> Definitions { get; set; } = new() { new() };
     }

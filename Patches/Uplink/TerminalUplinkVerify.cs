@@ -11,7 +11,7 @@ using SNetwork;
 namespace ExtraObjectiveSetup.Patches.Uplink
 {
     [HarmonyPatch]
-    internal class TerminalUplinkVerify
+    internal static class TerminalUplinkVerify
     {
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LG_ComputerTerminalCommandInterpreter), nameof(LG_ComputerTerminalCommandInterpreter.TerminalUplinkVerify))]

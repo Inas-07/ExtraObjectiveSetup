@@ -9,7 +9,7 @@ using Localization;
 namespace ExtraObjectiveSetup.Patches.Uplink
 {
     [HarmonyPatch]
-    internal class TerminalUplinkConnect
+    internal static class TerminalUplinkConnect
     {
         // normal uplink: rewrite the method to do more things
         [HarmonyPrefix]

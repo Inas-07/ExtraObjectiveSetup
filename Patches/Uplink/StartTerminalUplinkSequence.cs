@@ -8,7 +8,7 @@ using GameData;
 namespace ExtraObjectiveSetup.Patches.Uplink
 {
     [HarmonyPatch]
-    internal class StartTerminalUplinkSequence
+    internal static class StartTerminalUplinkSequence
     {
         // rewrite is indispensable
         // both uplink and corruplink call this method

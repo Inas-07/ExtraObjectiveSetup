@@ -19,7 +19,7 @@ namespace ExtraObjectiveSetup
     {
         public const string AUTHOR = "Inas";
         public const string PLUGIN_NAME = "ExtraObjectiveSetup";
-        public const string VERSION = "1.5.0";
+        public const string VERSION = "1.6.0";
 
         private Harmony m_Harmony;
         
@@ -46,6 +46,7 @@ namespace ExtraObjectiveSetup
             Tweaks.TerminalPosition.TerminalPositionOverrideManager.Current.Init();
             Tweaks.Scout.ScoutScreamEventManager.Current.Init();
             Tweaks.BossEvents.BossDeathEventManager.Current.Init();
+            //Tweaks.TerminalTweak.TerminalTweakManager.Current.Init();
 
             ExpeditionDefinitionManager.Current.Init();
             ExpeditionGearManager.Current.Init();

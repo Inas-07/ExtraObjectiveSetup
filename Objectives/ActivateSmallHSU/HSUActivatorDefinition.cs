@@ -4,6 +4,7 @@ using ExtraObjectiveSetup.Utils;
 using System.Text.Json.Serialization;
 using ChainedPuzzles;
 using ExtraObjectiveSetup.BaseClasses;
+using System;
 
 namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 {
@@ -27,5 +28,6 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
         public Vec3 ChainedPuzzleStartPosition { get; set; } = new();
 
         public List<WardenObjectiveEventData> EventsOnActivationScanSolved { get; set; } = new();
+
     }
 }

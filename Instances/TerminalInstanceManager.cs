@@ -2,20 +2,51 @@
 using ExtraObjectiveSetup.Utils;
 using GameData;
 using GTFO.API;
+using System.Collections.Generic;
 using LevelGeneration;
 using System;
+using System.Collections.Immutable;
+using ChainedPuzzles;
+using Il2CppSystem.Runtime.Remoting.Messaging;
+using ExtraObjectiveSetup.ExtendedWardenEvents;
 
 namespace ExtraObjectiveSetup.Instances
 {
     public sealed class TerminalInstanceManager: InstanceManager<LG_ComputerTerminal>
     {
+        public enum TerminalWardenEvents 
+        { 
+            EOSSetTerminalCommand = 600
+        }
+
+
         public static TerminalInstanceManager Current { get; private set; } = new();
+
+        public static ImmutableList<TERM_Command> UNIQUE_CMDS { get; } = new List<TERM_Command>() {
+            TERM_Command.UniqueCommand1,
+            TERM_Command.UniqueCommand2,
+            TERM_Command.UniqueCommand3,
+            TERM_Command.UniqueCommand4,
+            TERM_Command.UniqueCommand5,
+        }.ToImmutableList();
+
+
+        // key: ChainedPuzzleInstance.Pointer
+        private Dictionary<IntPtr, LG_ComputerTerminal> UniqueCommandChainPuzzles { get; } = new();
 
         public override (eDimensionIndex dim, LG_LayerType layer, eLocalZoneIndex zone) GetGlobalZoneIndex(LG_ComputerTerminal instance)
         {
             if(instance.SpawnNode == null)
             {
-                throw new ArgumentException("LG_ComputerTerminal.SpawnNode == null! This is a reactor terminal.");
+                if(instance.ConnectedReactor != null)
+                {
+                    var node = instance.ConnectedReactor.SpawnNode;
+                    return (node.m_dimension.DimensionIndex, node.LayerType, node.m_zone.LocalIndex);
+                }
+                else
+                {
+                    throw new ArgumentException("LG_ComputerTerminal: both SpawnNode and ConnectedReactor are null!");
+                }
             }
 
             return (instance.SpawnNode.m_dimension.DimensionIndex, instance.SpawnNode.LayerType, instance.SpawnNode.m_zone.LocalIndex);
@@ -53,13 +84,70 @@ namespace ExtraObjectiveSetup.Instances
 
         private void Clear()
         {
-
+            UniqueCommandChainPuzzles.Clear();
         }
+
+        private void GatherUniqueCommandChainPuzzles()
+        {
+            foreach (var terminalsInZone in index2Instance.Values) 
+            {
+                foreach(var t in terminalsInZone)
+                {
+                    foreach(var cmd in UNIQUE_CMDS)
+                    {
+                        if (!t.m_command.m_commandsPerEnum.ContainsKey(cmd)) continue;
+                        var cmdName = t.m_command.m_commandsPerEnum[cmd];
+                        var events = t.GetUniqueCommandEvents(cmdName);
+
+                        for(int i = 0; i < events.Count; i++)
+                        {
+                            if(t.TryGetChainPuzzleForCommand(cmd, i, out var cp))
+                            {
+                                UniqueCommandChainPuzzles[cp.Pointer] = t;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public bool TryGetParentTerminal(ChainedPuzzleInstance cpInstance, out LG_ComputerTerminal terminal) => UniqueCommandChainPuzzles.TryGetValue(cpInstance.Pointer, out terminal);
+
+        public bool TryGetParentTerminal(IntPtr pointer, out LG_ComputerTerminal terminal) => UniqueCommandChainPuzzles.TryGetValue(pointer, out terminal);
+
+        public void SetTerminalCommand(WardenObjectiveEventData e)
+        {
+            LG_LayerType layer = e.Layer;
+            eLocalZoneIndex localIndex = e.LocalIndex;
+            eDimensionIndex dimensionIndex = e.DimensionIndex;
+            LG_ComputerTerminal terminal = GetInstance(dimensionIndex, layer, localIndex, (uint)e.Count);
+            if (terminal == null)
+            {
+                EOSLogger.Error($"SetTerminalCommand_Custom: Cannot find reactor for {layer} or instance index ({(dimensionIndex, layer, localIndex, e.Count)})");
+                return;
+            }
+
+            if (e.Enabled == true)
+            {
+                terminal.TrySyncSetCommandShow(e.TerminalCommand);
+            }
+            else
+            {
+                terminal.TrySyncSetCommandHidden(e.TerminalCommand);
+            }
+
+            EOSLogger.Debug($"SetTerminalCommand: Terminal_{terminal.m_serialNumber}, command '{e.TerminalCommand}' enabled ? {e.Enabled}");
+        }
+
 
         private TerminalInstanceManager() 
         {
             LevelAPI.OnBuildStart += Clear;
             LevelAPI.OnLevelCleanup += Clear;
+
+            LevelAPI.OnEnterLevel += GatherUniqueCommandChainPuzzles;
+
+            EOSWardenEventManager.Current.AddEventDefinition(TerminalWardenEvents.EOSSetTerminalCommand.ToString(), (uint)TerminalWardenEvents.EOSSetTerminalCommand, SetTerminalCommand);
         }
     
         static TerminalInstanceManager() { }

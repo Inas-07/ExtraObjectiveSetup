@@ -8,7 +8,7 @@ using Localization;
 namespace ExtraObjectiveSetup.Patches.Uplink
 {
     [HarmonyPatch]
-    internal class CorruptedUplinkConnect
+    internal static class CorruptedUplinkConnect
     {
         // rewrite the method to do more things
         [HarmonyPrefix]

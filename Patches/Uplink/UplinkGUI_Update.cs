@@ -4,7 +4,7 @@ using LevelGeneration;
 namespace ExtraObjectiveSetup.Patches.Uplink
 {
     [HarmonyPatch]
-    internal class UplinkGUI_Update
+    internal static class UplinkGUI_Update
     {
         [HarmonyPostfix]
         [HarmonyPatch(typeof(LG_ComputerTerminal), nameof(LG_ComputerTerminal.Update))]

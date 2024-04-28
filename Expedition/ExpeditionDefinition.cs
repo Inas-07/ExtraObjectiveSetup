@@ -10,9 +10,7 @@ namespace ExtraObjectiveSetup.Expedition
 
         // Add expedition definition as needed
         public ExpeditionGearsDefinition ExpeditionGears { set; get; } = new();
-    
-        public List<ExpeditionIGGroup> GeneratorGroups { set; get; } = new() { new() };
 
-        public bool DisableMap { get; set; } = false;
+        public List<ExpeditionIGGroup> GeneratorGroups { set; get; } = new() { new() };
     }
 }

@@ -7,7 +7,7 @@ using Localization;
 namespace ExtraObjectiveSetup.Patches.Uplink
 {
     [HarmonyPatch]
-    internal class TerminalUplinkSequenceOutput
+    internal static class TerminalUplinkSequenceOutput
     {
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LG_ComputerTerminalCommandInterpreter), nameof(LG_ComputerTerminalCommandInterpreter.TerminalUplinkSequenceOutputs))]

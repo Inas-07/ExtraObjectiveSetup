@@ -35,7 +35,7 @@ namespace ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup
             return result;
         }
 
-        private ExpeditionIGGroup FindGroupDefOf(LG_PowerGenerator_Core core)
+        public ExpeditionIGGroup FindGroupDefOf(LG_PowerGenerator_Core core)
         {
             foreach(var generatorGroup in generatorGroups)
             {
@@ -47,7 +47,7 @@ namespace ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup
             return null;
         }
 
-        private System.Collections.IEnumerator PlayGroupEndSequence(ExpeditionIGGroup IGGroup)
+        internal static System.Collections.IEnumerator PlayGroupEndSequence(ExpeditionIGGroup IGGroup)
         {
             yield return new UnityEngine.WaitForSeconds(4f);
 
@@ -75,41 +75,43 @@ namespace ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup
 
         private void Configure(LG_PowerGenerator_Core core)
         {
-            core.OnSyncStatusChanged += new Action<ePowerGeneratorStatus>((status) => {
-                if (status != ePowerGeneratorStatus.Powered) return;
+            // NOTE: moved to SyncStatusChanged patch to fix checkpoint restore issue.
+
+            //core.OnSyncStatusChanged += new Action<ePowerGeneratorStatus>((status) => {
+            //    if (status != ePowerGeneratorStatus.Powered) return;
                 
-                var groupDef = FindGroupDefOf(core);
-                if(groupDef == null)
-                {
-                    EOSLogger.Error("LG_PowerGenerator_Core.OnSyncStatusChanged: generator does not belong to any IGGroup, but has been configured! WTF?");
-                    EOSLogger.Error($"pointer: {core.Pointer}");
-                    return;
-                }
+            //    var groupDef = FindGroupDefOf(core);
+            //    if(groupDef == null)
+            //    {
+            //        EOSLogger.Error("LG_PowerGenerator_Core.OnSyncStatusChanged: generator does not belong to any IGGroup, but has been configured! WTF?");
+            //        EOSLogger.Error($"pointer: {core.Pointer}");
+            //        return;
+            //    }
 
-                int poweredGeneratorCount = 0;
-                foreach(var g in groupDef.GeneratorInstances)
-                {
-                    if (g.m_stateReplicator.State.status == ePowerGeneratorStatus.Powered) 
-                    {
-                        poweredGeneratorCount += 1;
-                    }
-                }
+            //    int poweredGeneratorCount = 0;
+            //    foreach(var g in groupDef.GeneratorInstances)
+            //    {
+            //        if (g.m_stateReplicator.State.status == ePowerGeneratorStatus.Powered) 
+            //        {
+            //            poweredGeneratorCount += 1;
+            //        }
+            //    }
 
-                if (poweredGeneratorCount == groupDef.GeneratorInstances.Count && groupDef.PlayEndSequenceOnGroupComplete)
-                {
-                    var coroutine = CoroutineManager.StartCoroutine(PlayGroupEndSequence(groupDef).WrapToIl2Cpp());
-                    WorldEventManager.m_worldEventEventCoroutines.Add(coroutine);
-                }
+            //    if (poweredGeneratorCount == groupDef.GeneratorInstances.Count && groupDef.PlayEndSequenceOnGroupComplete)
+            //    {
+            //        var coroutine = CoroutineManager.StartCoroutine(PlayGroupEndSequence(groupDef).WrapToIl2Cpp());
+            //        WorldEventManager.m_worldEventEventCoroutines.Add(coroutine);
+            //    }
 
-                else 
-                {
-                    int eventIndex = poweredGeneratorCount - 1;
-                    if(eventIndex >= 0 && eventIndex < groupDef.EventsOnInsertCell.Count)
-                    {
-                        groupDef.EventsOnInsertCell[eventIndex].ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, GameData.eWardenObjectiveEventTrigger.None, true));
-                    }
-                }
-            });
+            //    else 
+            //    {
+            //        int eventIndex = poweredGeneratorCount - 1;
+            //        if(eventIndex >= 0 && eventIndex < groupDef.EventsOnInsertCell.Count)
+            //        {
+            //            groupDef.EventsOnInsertCell[eventIndex].ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, GameData.eWardenObjectiveEventTrigger.None, true));
+            //        }
+            //    }
+            //});
         }
 
         internal void BuildIGGroupsLogic()
