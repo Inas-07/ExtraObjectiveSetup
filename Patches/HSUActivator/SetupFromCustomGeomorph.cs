@@ -40,23 +40,23 @@ namespace ExtraObjectiveSetup.Patches.HSUActivator
 
             // reset, do nothing
             // do not interfere with warden objective
-            __instance.m_insertHSUInteraction.OnInteractionSelected = new System.Action<PlayerAgent>((p) => { });
+            __instance.m_insertHSUInteraction.OnInteractionSelected = new Action<PlayerAgent>((p) => { });
 
-            __instance.m_sequencerInsertItem.OnSequenceDone = new System.Action(() =>
+            __instance.m_sequencerInsertItem.OnSequenceDone = new Action(() =>
             {
                 pHSUActivatorState state = __instance.m_stateReplicator.State;
                 if (!state.isSequenceIncomplete)
-                    EOSLogger.Error(">>>>>> HSUInsertSequenceDone! Sequence was already complete");
+                    EOSLogger.Log(">>>>>> HSUInsertSequenceDone! Sequence was already complete");
                 state.isSequenceIncomplete = false;
                 __instance.m_stateReplicator.SetStateUnsynced(state);
-                EOSLogger.Error(">>>>>> HSUInsertSequenceDone!");
+                EOSLogger.Log(">>>>>> HSUInsertSequenceDone!");
                 if (__instance.m_triggerExtractSequenceRoutine != null)
                 {
                     __instance.StopCoroutine(__instance.m_triggerExtractSequenceRoutine);
                 }
             });
 
-            __instance.m_sequencerExtractItem.OnSequenceDone = new System.Action(() =>
+            __instance.m_sequencerExtractItem.OnSequenceDone = new Action(() =>
             {
                 __instance.m_stateReplicator.SetStateUnsynced(__instance.m_stateReplicator.State with
                 {

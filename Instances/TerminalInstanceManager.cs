@@ -9,6 +9,7 @@ using System.Collections.Immutable;
 using ChainedPuzzles;
 using Il2CppSystem.Runtime.Remoting.Messaging;
 using ExtraObjectiveSetup.ExtendedWardenEvents;
+using ExtraObjectiveSetup.Tweaks.TerminalTweak;
 
 namespace ExtraObjectiveSetup.Instances
 {
@@ -16,7 +17,8 @@ namespace ExtraObjectiveSetup.Instances
     {
         public enum TerminalWardenEvents 
         { 
-            EOSSetTerminalCommand = 600
+            EOSSetTerminalCommand = 600,
+            EOSToggleTerminalState = 601,
         }
 
 
@@ -33,6 +35,8 @@ namespace ExtraObjectiveSetup.Instances
 
         // key: ChainedPuzzleInstance.Pointer
         private Dictionary<IntPtr, LG_ComputerTerminal> UniqueCommandChainPuzzles { get; } = new();
+
+        private Dictionary<IntPtr, TerminalWrapper> Wrappers { get; } = new();
 
         public override (eDimensionIndex dim, LG_LayerType layer, eLocalZoneIndex zone) GetGlobalZoneIndex(LG_ComputerTerminal instance)
         {
@@ -82,9 +86,31 @@ namespace ExtraObjectiveSetup.Instances
             return index;
         }
 
+        public void SetupTerminalWrapper(LG_ComputerTerminal terminal)
+        {
+            if(Wrappers.ContainsKey(terminal.Pointer))
+            {
+                EOSLogger.Error($"TerminalInstanceManager: {terminal.ItemKey} is already setup with wrapper...");
+                return;
+            }
+                
+            uint allotedID = EOSNetworking.AllotReplicatorID();
+            if (allotedID == EOSNetworking.INVALID_ID)
+            {
+                EOSLogger.Error($"TerminalStateManager: replicator ID depleted, cannot setup terminal...");
+                return;
+            }
+
+            TerminalWrapper t = TerminalWrapper.Instantiate(terminal, allotedID);
+            Wrappers[terminal.Pointer] = t;
+        }
+
+        public TerminalWrapper GetTerminalWrapper(LG_ComputerTerminal terminal) => Wrappers.ContainsKey(terminal.Pointer) ? Wrappers[terminal.Pointer] : null;
+
         private void Clear()
         {
             UniqueCommandChainPuzzles.Clear();
+            Wrappers.Clear();
         }
 
         private void GatherUniqueCommandChainPuzzles()
@@ -139,6 +165,26 @@ namespace ExtraObjectiveSetup.Instances
             EOSLogger.Debug($"SetTerminalCommand: Terminal_{terminal.m_serialNumber}, command '{e.TerminalCommand}' enabled ? {e.Enabled}");
         }
 
+        public void ToggleTerminalState(WardenObjectiveEventData e)
+        {
+            bool enabled = e.Enabled;
+
+            var terminal = GetInstance(e.DimensionIndex, e.Layer, e.LocalIndex, (uint)e.Count);
+            if (terminal == null)
+            {
+                EOSLogger.Error($"ToggleTerminalState: terminal with index {(e.DimensionIndex, e.Layer, e.LocalIndex, e.Count)} not found");
+                return;
+            }
+
+            var wrapper = GetTerminalWrapper(terminal);
+            if (wrapper == null)
+            {
+                EOSLogger.Error($"ToggleTerminalState: internal error: terminal wrapper not found - {(e.DimensionIndex, e.Layer, e.LocalIndex, e.Count)}");
+                return;
+            }
+
+            wrapper.ChangeState(enabled);
+        }
 
         private TerminalInstanceManager() 
         {
@@ -148,6 +194,7 @@ namespace ExtraObjectiveSetup.Instances
             LevelAPI.OnEnterLevel += GatherUniqueCommandChainPuzzles;
 
             EOSWardenEventManager.Current.AddEventDefinition(TerminalWardenEvents.EOSSetTerminalCommand.ToString(), (uint)TerminalWardenEvents.EOSSetTerminalCommand, SetTerminalCommand);
+            EOSWardenEventManager.Current.AddEventDefinition(TerminalWardenEvents.EOSToggleTerminalState.ToString(), (uint)TerminalWardenEvents.EOSToggleTerminalState, ToggleTerminalState);
         }
     
         static TerminalInstanceManager() { }

@@ -10,6 +10,9 @@ using GTFO.API.Extensions;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.BaseClasses;
 using FloLib.Networks.Replications;
+using ExtraObjectiveSetup.Instances.ChainedPuzzle;
+using SNetwork;
+using UnityEngine;
 
 namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 {
@@ -56,7 +59,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 
                 if (receiver == null)
                 {
-                    EOSLogger.Error("BuildUplink: SetupAsCorruptedUplink specified but didn't find the receiver terminal, will fall back to normal uplink instead");
+                    EOSLogger.Error("BuildUplink: SetupAsCorruptedUplink specified but didn't find the receiver terminal!");
                     return;
                 }
 
@@ -132,6 +135,40 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
                         uplinkTerminal.SpawnNode.m_area,
                         uplinkTerminal.m_wardenObjectiveSecurityScanAlign.position,
                         uplinkTerminal.m_wardenObjectiveSecurityScanAlign);
+
+                    if(def.SetupAsCorruptedUplink)
+                    {
+                        uplinkTerminal.m_chainPuzzleForWardenObjective.Add_OnStateChange((oldState, newState, isRecall) =>
+                        {
+                            if (oldState.status == newState.status) return;
+                            switch (newState.status)
+                            {
+                                case eChainedPuzzleStatus.Solved:
+                                    if (!isRecall)
+                                    {
+                                        uplinkTerminal.CorruptedUplinkReceiver.m_command.StartTerminalUplinkSequence(string.Empty, true);
+                                        ChangeState(uplinkTerminal, new() { Status = UplinkStatus.InProgress, CurrentRoundIndex = 0 });
+                                    }
+                                    break;
+                            }
+                        });
+                    }
+                    else
+                    {
+                        uplinkTerminal.m_chainPuzzleForWardenObjective.Add_OnStateChange((oldState, newState, isRecall) =>
+                        {
+                            if (oldState.status == newState.status) return;
+                            switch (newState.status)
+                            {
+                                case eChainedPuzzleStatus.Solved:
+                                    if (!isRecall)
+                                    {
+                                        uplinkTerminal.m_command.StartTerminalUplinkSequence(uplinkTerminal.UplinkPuzzle.TerminalUplinkIP);
+                                    }
+                                    break;
+                            }
+                        });
+                    }
                 }
             }
 
@@ -259,7 +296,10 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
                 return;
             }
 
-            stateReplicators[terminal.Pointer].SetState(newState);
+            if(SNet.IsMaster)
+            {
+                stateReplicators[terminal.Pointer].SetState(newState);
+            }
         }
 
         private void OnBuildDone()

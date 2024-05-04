@@ -25,9 +25,9 @@ namespace ExtraObjectiveSetup.Patches.PowerGenerator
             GeneratorClusterDefinition gcDef = null;
             if(gcParent != null)
             {
-                uint gcZoneInstanceIndex = GeneratorClusterInstanceManager.Current.Register(gcParent);
+                uint gcZoneInstanceIndex = GeneratorClusterInstanceManager.Current.GetZoneInstanceIndex(gcParent);
                 var gcGlobalZoneIndex = GeneratorClusterInstanceManager.Current.GetGlobalZoneIndex(gcParent);
-                gcDef = GeneratorClusterObjectiveManager.Current.GetDefinition(globalZoneIndex, zoneInstanceIndex);
+                gcDef = GeneratorClusterObjectiveManager.Current.GetDefinition(gcGlobalZoneIndex, gcZoneInstanceIndex);
             }
 
             // ==================== ==================== ====================

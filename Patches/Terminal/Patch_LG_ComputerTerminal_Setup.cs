@@ -14,6 +14,7 @@ namespace ExtraObjectiveSetup.Patches.Terminal
         private static void Post_LG_ComputerTerminal_Setup(LG_ComputerTerminal __instance)
         {
             uint instanceIndex = TerminalInstanceManager.Current.Register(__instance);
+            TerminalInstanceManager.Current.SetupTerminalWrapper(__instance);
 
             // modify terminal position
             if (__instance.SpawnNode == null) return; // disallow changing position of reactor terminal

@@ -7,6 +7,8 @@ using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.BaseClasses;
 using System.Collections.Generic;
 using System;
+using ExtraObjectiveSetup.Instances.ChainedPuzzle;
+using GTFO.API.Extensions;
 
 namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 {
@@ -39,7 +41,7 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 
             if (def.RequireItemAfterActivationInExitScan == true)
             {
-                instance.m_sequencerExtractionDone.OnSequenceDone += new System.Action(() => {
+                instance.m_sequencerExtractionDone.OnSequenceDone += new Action(() => {
                     WardenObjectiveManager.AddObjectiveItemAsRequiredForExitScan(true, new iWardenObjectiveItem[1] { new iWardenObjectiveItem(instance.m_linkedItemComingOut.Pointer) });
                     EOSLogger.Debug($"HSUActivator: {(def.DimensionIndex, def.LayerType, def.LocalIndex, def.InstanceIndex)} - added required item for extraction scan");
                 });
@@ -47,7 +49,7 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
 
             if (def.TakeOutItemAfterActivation)
             {
-                instance.m_sequencerExtractionDone.OnSequenceDone += new System.Action(() => {
+                instance.m_sequencerExtractionDone.OnSequenceDone += new Action(() => {
                     instance.LinkedItemComingOut.m_navMarkerPlacer.SetMarkerVisible(true);
                 });
             }
@@ -81,6 +83,23 @@ namespace ExtraObjectiveSetup.Objectives.ActivateSmallHSU
                     // PuzzleInstance will be activated in SyncStateChanged
                     // EventsOnActivationScanSolved and HSU removeSequence will be executed in 
                     // ChainedPuzzleInstance.OnStateChanged(patch ChainedPuzzleInstance_OnPuzzleSolved)
+
+                    puzzleInstance.Add_OnStateChange((_, newState, isRecall) =>
+                    {
+                        switch (newState.status) 
+                        {
+                            case eChainedPuzzleStatus.Solved:
+                                if (!isRecall)
+                                {
+                                    WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(def.EventsOnActivationScanSolved.ToIl2Cpp(), eWardenObjectiveEventTrigger.None, true);
+                                    if (def.TakeOutItemAfterActivation)
+                                    {
+                                        instance.m_triggerExtractSequenceRoutine = instance.StartCoroutine(instance.TriggerRemoveSequence());
+                                    }
+                                }
+                                break;
+                        }
+                    });
 
                     EOSLogger.Debug($"HSUActivator: ChainedPuzzleOnActivation ID: {def.ChainedPuzzleOnActivation} specified and created");
                 }

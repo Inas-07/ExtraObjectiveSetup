@@ -4,6 +4,8 @@ using GameData;
 using ChainedPuzzles;
 using ExtraObjectiveSetup.Utils;
 using ExtraObjectiveSetup.BaseClasses;
+using ExtraObjectiveSetup.Instances.ChainedPuzzle;
+using GTFO.API.Extensions;
 
 namespace ExtraObjectiveSetup.Objectives.GeneratorCluster
 {
@@ -44,7 +46,18 @@ namespace ExtraObjectiveSetup.Objectives.GeneratorCluster
                         __instance.m_chainedPuzzleAlignMidObjective.position,
                         __instance.m_chainedPuzzleAlignMidObjective);
 
-                    __instance.m_chainedPuzzleMidObjective.OnPuzzleSolved += new System.Action(() => config.EventsOnEndSequenceChainedPuzzleComplete?.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true)));
+                    __instance.m_chainedPuzzleMidObjective.Add_OnStateChange((_, newState, isRecall) =>
+                    {
+                        switch(newState.status)
+                        {
+                            case eChainedPuzzleStatus.Solved:
+                                if (!isRecall)
+                                {
+                                    WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(config.EventsOnEndSequenceChainedPuzzleComplete.ToIl2Cpp(), eWardenObjectiveEventTrigger.None, true);
+                                }
+                                break;
+                        }
+                    });
                 }
             }
         }
