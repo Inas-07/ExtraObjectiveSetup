@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using ExtraObjectiveSetup.Utils;
 using GTFO.API.JSON.Converters;
+using Localization;
 
 namespace ExtraObjectiveSetup.JSON
 {
@@ -26,7 +27,8 @@ namespace ExtraObjectiveSetup.JSON
             if (MTFOPartialDataUtil.IsLoaded)
             {
                 _setting.Converters.Add(MTFOPartialDataUtil.PersistentIDConverter);
-                _setting.Converters.Add(MTFOPartialDataUtil.LocalizedTextConverter);
+                _setting.Converters.Add(WritableLocalizedTextConverter.Converter);
+                //_setting.Converters.Add(MTFOPartialDataUtil.LocalizedTextConverter);
                 EOSLogger.Log("PartialData support found!");
             }
 

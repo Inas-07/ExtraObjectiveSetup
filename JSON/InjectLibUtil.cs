@@ -3,7 +3,8 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using BepInEx.Unity.IL2CPP;
 using ExtraObjectiveSetup.Utils;
-
+using Il2CppInterop.Runtime;
+using Il2CppSystem.Runtime.InteropServices;
 namespace ExtraObjectiveSetup.JSON
 {
     public static class InjectLibUtil
@@ -29,7 +30,7 @@ namespace ExtraObjectiveSetup.JSON
                     var converterType = types.First(t => t.Name == "InjectLibConnector");
                     if (converterType is null)
                         throw new Exception("Unable to Find InjectLibConnector Class");
-
+                    
                     InjectLibConnector = (JsonConverter)Activator.CreateInstance(converterType);
                     IsLoaded = true;
                 }

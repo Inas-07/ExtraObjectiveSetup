@@ -20,9 +20,7 @@ namespace ExtraObjectiveSetup.Patches
         [HarmonyPatch(typeof(EnemySync), nameof(EnemySync.OnSpawn))]
         private static void Post_SpawnEnemy(EnemySync __instance, pEnemySpawnData spawnData) // 原生怪的mode == hibernate
         {
-            AIG_CourseNode node = null;
-
-            if (spawnData.courseNode.TryGet(out node) == false || node == null)
+            if (!spawnData.courseNode.TryGet(out var node) || node == null)
             {
                 EOSLogger.Error("Failed to get spawnnode for a boss! Skipped EventsOnBossDeath for it");
                 return;
@@ -37,7 +35,14 @@ namespace ExtraObjectiveSetup.Patches
             if (!def.BossIDs.Contains(enemy.EnemyData.persistentID)) return;
 
             // TODO: test 
-            if (!(spawnData.mode == Agents.AgentMode.Hibernate && def.ApplyToHibernate || spawnData.mode == Agents.AgentMode.Agressive && def.ApplyToWave)) return;
+            if (!(
+                (spawnData.mode == Agents.AgentMode.Hibernate || spawnData.mode == Agents.AgentMode.Scout) 
+                && def.ApplyToHibernate 
+                
+                || 
+
+                spawnData.mode == Agents.AgentMode.Agressive && def.ApplyToWave
+                )) return;
 
             var mode = spawnData.mode == Agents.AgentMode.Hibernate ? BossDeathEventManager.Mode.HIBERNATE : BossDeathEventManager.Mode.WAVE;
             //BossDeathEventManager.Current.RegisterInLevelBDEventsExecution(def, mode);
