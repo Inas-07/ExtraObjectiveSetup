@@ -52,7 +52,7 @@ namespace ExtraObjectiveSetup.Patches.PowerGenerator
                     var EventsOnInsertCell = gcDef.EventsOnInsertCell;
 
                     int eventsIndex = (int)(poweredGenerators - 1);
-                    
+
                     if(!isDropinState)
                     {
                         if (eventsIndex >= 0 && eventsIndex < EventsOnInsertCell.Count)
@@ -75,6 +75,11 @@ namespace ExtraObjectiveSetup.Patches.PowerGenerator
                             gcParent.m_endSequenceTriggered = false;
                         }
                     }
+                } 
+                else if (isDropinState)
+                {
+                    // Reloading from checkpoint and generator is unpowered, thus cluster is implicitly unfinished
+                    gcParent.m_endSequenceTriggered = false;
                 }
             }
 
