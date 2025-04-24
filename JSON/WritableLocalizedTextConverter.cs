@@ -1,4 +1,5 @@
-﻿using GTFO.API.JSON.Converters;
+﻿using ExtraObjectiveSetup.JSON.MTFOPartialData;
+using GTFO.API.JSON.Converters;
 using Localization;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,6 @@ namespace ExtraObjectiveSetup.JSON
 
             throw new NotImplementedException();
         }
-
 
         public override void Write(Utf8JsonWriter writer, LocalizedText value, JsonSerializerOptions options)
         {

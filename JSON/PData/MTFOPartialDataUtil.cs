@@ -4,8 +4,14 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using ExtraObjectiveSetup.Utils;
+using System.Text.Json.Nodes;
+using ExtraObjectiveSetup.JSON.Extensions;
+using System.Text.Json;
+using System.IO;
+using System.Collections.Generic;
+using ExtraObjectiveSetup.JSON.PData;
 
-namespace ExtraObjectiveSetup.JSON
+namespace ExtraObjectiveSetup.JSON.MTFOPartialData
 {
     public static class MTFOPartialDataUtil
     {
@@ -17,6 +23,10 @@ namespace ExtraObjectiveSetup.JSON
         public static bool Initialized { get; private set; } = false;
         public static string PartialDataPath { get; private set; } = string.Empty;
         public static string ConfigPath { get; private set; } = string.Empty;
+        
+        public const string ID_FILE_NAME = "_persistentID.json";
+
+        private static Dictionary<string, uint> pdataGUID = null;
 
         static MTFOPartialDataUtil()
         {
@@ -69,6 +79,74 @@ namespace ExtraObjectiveSetup.JSON
                     EOSLogger.Error($"Exception thrown while reading data from MTFO_Extension_PartialData:\n{e}");
                 }
             }
+        }
+
+        internal static void ReadPDataGUID()
+        {
+            if (pdataGUID != null) return;
+
+            if (!IsLoaded)
+            {
+                EOSLogger.Error("ReadPDataGUID: invoked when not loaded, which is a broken operation");
+                return;
+            }
+
+            var id_file_path = Path.Combine(PartialDataPath, ID_FILE_NAME);
+            if (!File.Exists(id_file_path))
+            {
+                EOSLogger.Error("ReadPDataGUID: PartialData GUID file not found");
+                return;
+            }
+
+            string content = File.ReadAllText(id_file_path);
+            var guids = EOSJson.Deserialize<List<PDataGUID>>(content);
+
+            pdataGUID = new();
+            foreach (var guid in guids)
+            {
+                if(!pdataGUID.TryAdd(guid.GUID, guid.ID))
+                {
+                    EOSLogger.Error($"ReadPDataGUID: cannot add '{guid.GUID}', probably there's a duplicate");
+                }
+            }
+
+            EOSLogger.Log($"ReadPDataGUID: Loaded {pdataGUID.Count} PData GUID");
+        }
+
+        public static bool TryGetID(string guid, out uint id)
+        {
+            id = 0u;
+            return pdataGUID?.TryGetValue(guid, out id) ?? false;
+        }
+
+        public static string ConvertAllGUID(string json)
+        {
+            if (!IsLoaded)
+            {
+                EOSLogger.Error("MTFOPartialDataUtil.ConvertAllGUID: partial data is not loaded");
+                return json;
+            }
+
+            var root = JsonNode.Parse(json,
+                nodeOptions: new() { },
+                documentOptions: new() { CommentHandling = JsonCommentHandling.Skip });
+            foreach (var item in root.DescendantItemsAndSelf().Where(i => i.name != null && i.node is JsonValue).ToList())
+            {
+                var value = item.node.GetValue<JsonElement>();
+                if (value.ValueKind == JsonValueKind.String && item.name != null)
+                {
+                    if (TryGetID(item.node.ToString(), out uint id) && id != 0)
+                    {
+                        var parent = (JsonObject)item.parent;
+                        parent.Remove(item.name);
+                        parent.Add(item.name, id);
+                    }
+                }
+            }
+
+            return root.ToString();
+
+            //I could just write a wrapper for json serializer that replaces all pdata guid with uint id before passing it to json converter in injectlib
         }
     }
 }

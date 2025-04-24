@@ -6,7 +6,10 @@ using UnityEngine;
 using ExtraObjectiveSetup.Utils;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.Objectives.GeneratorCluster;
-
+using Il2cppStringList = Il2CppSystem.Collections.Generic.List<string>;
+using Localization;
+using BepInEx.Unity.IL2CPP.Utils.Collections;
+using GTFO.API.Extensions;
 namespace ExtraObjectiveSetup.Patches.PowerGenerator
 {
     [HarmonyPatch]
@@ -37,13 +40,33 @@ namespace ExtraObjectiveSetup.Patches.PowerGenerator
             __instance.m_terminalItem = GOUtil.GetInterfaceFromComp<iTerminalItem>(__instance.m_terminalItemComp);
             __instance.m_terminalItem.Setup(__instance.m_itemKey);
             __instance.m_terminalItem.FloorItemStatus = eFloorInventoryObjectStatus.UnPowered;
+            //__instance.m_terminalItem.OnWantDetailedInfo = // crash
+            //    new System.Func<Il2cppStringList, Il2cppStringList>((defaultMsg) =>
+            //    {
+            //        var ans = new List<string>() {
+            //            "----------------------------------------------------------------",
+            //            Text.Get(2039482219),
+            //        };
+            //        foreach(var msg in defaultMsg)
+            //        {
+            //            ans.Add(msg);
+            //        }
+
+            //        ans.Add("");
+            //        ans.Add("");
+            //        ans.Add(Text.Get(3119507756));
+            //        ans.Add("----------------------------------------------------------------");
+
+            //        return ans.ToIl2Cpp();
+            //    });
+            
             if (__instance.SpawnNode != null)
                 __instance.m_terminalItem.FloorItemLocation = __instance.SpawnNode.m_zone.NavInfo.GetFormattedText(LG_NavInfoFormat.Full_And_Number_With_Underscore);
 
             List<Transform> transformList = new List<Transform>(__instance.m_generatorAligns);
             uint numberOfGenerators = def.NumberOfGenerators;
             __instance.m_generators = new LG_PowerGenerator_Core[numberOfGenerators];
-
+            
             if (transformList.Count >= numberOfGenerators)
             {
                 for (int j = 0; j < numberOfGenerators; ++j)

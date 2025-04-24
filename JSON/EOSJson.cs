@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using ExtraObjectiveSetup.JSON.MTFOPartialData;
 using ExtraObjectiveSetup.Utils;
 using GTFO.API.JSON.Converters;
-using Localization;
 
 namespace ExtraObjectiveSetup.JSON
 {
@@ -16,7 +17,6 @@ namespace ExtraObjectiveSetup.JSON
             PropertyNameCaseInsensitive = true,
             WriteIndented = true,
             IgnoreReadOnlyProperties = true,
-
         };
 
 
@@ -32,16 +32,31 @@ namespace ExtraObjectiveSetup.JSON
                 EOSLogger.Log("PartialData support found!");
             }
 
-            else
-            {
-                _setting.Converters.Add(new LocalizedTextConverter());
-            }
-
-            if(InjectLibUtil.IsLoaded)
-            {
-                _setting.Converters.Add(InjectLibUtil.InjectLibConnector);
-                EOSLogger.Log("InjectLib (AWO) support found!");
-            }
+            //if (MTFOPartialDataUtil.IsLoaded && InjectLibUtil.IsLoaded)
+            //{
+            //    _setting.Converters.Add(InjectLibUtil.InjectLibConnector);
+            //    _setting.Converters.Add(new LocalizedTextConverter());
+            //    EOSLogger.Log("InjectLib (AWO) && PartialData support found!");
+            //}
+            //else
+            //{
+            //    if (MTFOPartialDataUtil.IsLoaded)
+            //    {
+            //        _setting.Converters.Add(MTFOPartialDataUtil.PersistentIDConverter);
+            //        _setting.Converters.Add(WritableLocalizedTextConverter.Converter);
+            //        //_setting.Converters.Add(MTFOPartialDataUtil.LocalizedTextConverter);
+            //        EOSLogger.Log("PartialData support found!");
+            //    }
+            //    else
+            //    {
+            //        if (InjectLibUtil.IsLoaded)
+            //        {
+            //            _setting.Converters.Add(InjectLibUtil.InjectLibConnector);
+            //            EOSLogger.Log("InjectLib (AWO) support found!");
+            //        }
+            //        _setting.Converters.Add(new LocalizedTextConverter());
+            //    }
+            //}
         }
 
         public static T Deserialize<T>(string json)

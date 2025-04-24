@@ -30,7 +30,7 @@ namespace ExtraObjectiveSetup.JSON
                     var converterType = types.First(t => t.Name == "InjectLibConnector");
                     if (converterType is null)
                         throw new Exception("Unable to Find InjectLibConnector Class");
-                    
+
                     InjectLibConnector = (JsonConverter)Activator.CreateInstance(converterType);
                     IsLoaded = true;
                 }
@@ -40,5 +40,6 @@ namespace ExtraObjectiveSetup.JSON
                 }
             }
         }
+
     }
 }

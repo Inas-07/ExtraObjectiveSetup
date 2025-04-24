@@ -1,0 +1,135 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Dependencies.props" />
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ExtraObjectiveSetup</RootNamespace>
+    <AssemblyName>Inas07.ExtraObjectiveSetup</AssemblyName>
+    <!--<TargetFramework>net6-windows</TargetFramework>-->
+    <TargetFramework>net6</TargetFramework>
+    <!--<AnalysisLevel>6.0-recommended</AnalysisLevel>-->
+    <LangVersion>preview</LangVersion>
+    <!--
+      Due to the nature of coding with IL2CPP, unsafe blocks will be allowed by default.
+    -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>x64</Platforms>
+    <OutputPath>I:\SteamLibrary\steamapps\common\GTFO\BepInEx\plugins</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="BaseClasses\CustomTerminalDefinition\CustomCommand.cs" />
+    <Compile Include="BaseClasses\CustomTerminalDefinition\PasswordData.cs" />
+    <Compile Include="BaseClasses\CustomTerminalDefinition\TerminalDefinition.cs" />
+    <Compile Include="BaseClasses\CustomTerminalDefinition\TerminalZoneSelectionData.cs" />
+    <Compile Include="BaseClasses\GenericDefinitionManager.cs" />
+    <Compile Include="BaseClasses\GenericDefinition.cs" />
+    <Compile Include="BaseClasses\RundownWiseDefinition.cs" />
+    <Compile Include="BaseClasses\RundownWiseDefinitionManager.cs" />
+    <Compile Include="BaseClasses\GenericExpeditionDefinitionManager.cs" />
+    <Compile Include="BaseClasses\GenericExpeditionDefinition.cs" />
+    <Compile Include="EOSNetworking.cs" />
+    <Compile Include="Expedition\ExpeditionDefinition.cs" />
+    <Compile Include="BaseClasses\InstanceDefinitions.cs" />
+    <Compile Include="Expedition\ExpeditionDefinitionManager.cs" />
+    <Compile Include="BaseClasses\ZoneDefinitions.cs" />
+    <Compile Include="BaseClasses\ZoneDefinitionManager.cs" />
+    <Compile Include="BatchBuildManager.cs" />
+    <Compile Include="Expedition\Gears\ExpeditionGearManager.cs" />
+    <Compile Include="Expedition\Gears\ExpeditionGearsDefinition.cs" />
+    <Compile Include="Expedition\IndividualGeneratorGroup\ExpeditionIGGroup.cs" />
+    <Compile Include="Expedition\IndividualGeneratorGroup\ExpeditionIGGroupManager.cs" />
+    <Compile Include="ExtendedWardenEvents\EOSWardenEventManager.cs" />
+    <Compile Include="Instances\ChainedPuzzle\ChainedPuzzleInstanceHelper.cs" />
+    <Compile Include="Instances\ChainedPuzzle\ChainedPuzzleInstanceManager.cs" />
+    <Compile Include="JSON\Extensions\JsonExtensions.cs" />
+    <Compile Include="JSON\Extensions\RecursiveEnumerableExtensions.cs" />
+    <Compile Include="JSON\InjectLibUtil.cs" />
+    <Compile Include="JSON\PData\MTFOPartialDataUtil.cs" />
+    <Compile Include="JSON\MTFOUtil.cs" />
+    <Compile Include="JSON\MyVector3Converter.cs" />
+    <Compile Include="JSON\PData\PDataGUID.cs" />
+    <Compile Include="JSON\WritableLocalizedTextConverter.cs" />
+    <Compile Include="Objectives\ActivateSmallHSU\HSUActivatorDefinition.cs" />
+    <Compile Include="BaseClasses\InstanceDefinitionManager.cs" />
+    <Compile Include="Objectives\ActivateSmallHSU\HSUActivatorObjectiveManager.cs" />
+    <Compile Include="Objectives\GeneratorCluster\GeneratorClusterDefinition.cs" />
+    <Compile Include="Objectives\GeneratorCluster\GeneratorClusterObjectiveManager.cs" />
+    <Compile Include="Objectives\IndividualGenerator\IndividualGeneratorObjectiveManager.cs" />
+    <Compile Include="Objectives\IndividualGenerator\IndividualGenerators.cs" />
+    <Compile Include="BaseClasses\InstanceManager.cs" />
+    <Compile Include="Objectives\ObjectiveCounter\Counter.cs" />
+    <Compile Include="Objectives\ObjectiveCounter\CounterWardenEvent.cs" />
+    <Compile Include="Objectives\ObjectiveCounter\ObjectiveCounterDefinition.cs" />
+    <Compile Include="Objectives\ObjectiveCounter\ObjectiveCounterManager.cs" />
+    <Compile Include="Objectives\TerminalUplink\UplinkDefinition.cs" />
+    <Compile Include="Objectives\TerminalUplink\UplinkObjectiveManager.cs" />
+    <Compile Include="Instances\HSUActivatorInstanceManager.cs" />
+    <Compile Include="Instances\GeneratorClusterInstanceManager.cs" />
+    <Compile Include="Instances\PowerGeneratorInstanceManager.cs" />
+    <Compile Include="Instances\TerminalInstanceManager.cs" />
+    <Compile Include="EntryPoint.cs" />
+    <Compile Include="Objectives\TerminalUplink\UplinkState.cs" />
+    <Compile Include="Patches\ChainedPuzzle\ChainedPuzzleManager_CreatePuzzleInstance.cs" />
+    <Compile Include="Patches\Expedition\GearManager_LoadOfflineGearDatas.cs" />
+    <Compile Include="Patches\Expedition\DisabelMap.cs" />
+    <Compile Include="Patches\Expedition\RundownManager_SetActiveExpedition.cs" />
+    <Compile Include="Patches\ChainedPuzzle\ChainedPuzzleInstance_OnStateChange.cs" />
+    <Compile Include="Patches\HSUActivator\ChainedPuzzleInstance_OnPuzzleSolved.cs" />
+    <Compile Include="Patches\HSUActivator\SetupFromCustomGeomorph.cs" />
+    <Compile Include="Patches\HSUActivator\SyncStatusChanged.cs" />
+    <Compile Include="Patches\LGFactory\Patch_LG_Factory_NextBatch.cs" />
+    <Compile Include="Patches\Patch_CheckAndExecuteEventsOnTrigger.cs" />
+    <Compile Include="Patches\Patch_EventsOnBossDeath.cs" />
+    <Compile Include="Patches\Patch_EventsOnZoneScoutScream.cs" />
+    <Compile Include="Patches\LGFactory\Patch_LG_Factory_Setup.cs" />
+    <Compile Include="Patches\Patch_OnRecallDone.cs" />
+    <Compile Include="Patches\Terminal\Patch_FixHiddenCommandExecution.cs" />
+    <Compile Include="Patches\Terminal\Patch_FixRepeatablePuzzleBugs.cs" />
+    <Compile Include="Patches\Terminal\Patch_LG_ComputerTerminal_Setup.cs" />
+    <Compile Include="Patches\PowerGenerator\Patch_LG_PowerGeneratorCluster.cs" />
+    <Compile Include="Patches\PowerGenerator\Patch_LG_PowerGenerator_Core_SyncStatusChanged.cs" />
+    <Compile Include="Patches\PowerGenerator\Patch_LG_PowerGenerator_Core_Setup.cs" />
+    <Compile Include="Patches\Terminal\Patch_RepeatableCommandEventFix.cs" />
+    <Compile Include="Patches\Uplink\CorruptedUplinkConfirm.cs" />
+    <Compile Include="Patches\Uplink\CorruptedUplinkConnect.cs" />
+    <Compile Include="Patches\Uplink\StartTerminalUplinkSequence.cs" />
+    <Compile Include="Patches\Uplink\TerminalUplinkConnect.cs" />
+    <Compile Include="Patches\Uplink\TerminalUplinkSequenceOutput.cs" />
+    <Compile Include="Patches\Uplink\TerminalUplinkVerify.cs" />
+    <Compile Include="Patches\Uplink\UplinkGUI_Update.cs" />
+    <Compile Include="JSON\EOSJson.cs" />
+    <Compile Include="Tweaks\BossEvents\EventsOnZoneBossDeath.cs" />
+    <Compile Include="Tweaks\Scout\EventsOnZoneScoutScream.cs" />
+    <Compile Include="Tweaks\BossEvents\BossDeathEventManager.cs" />
+    <Compile Include="Tweaks\Scout\ScoutScreamEventManager.cs" />
+    <Compile Include="Tweaks\TerminalPosition\TerminalPosition.cs" />
+    <Compile Include="Tweaks\TerminalPosition\TerminalPositionOverrideManager.cs" />
+    <Compile Include="Tweaks\TerminalTweak\TerminalState.cs" />
+    <Compile Include="Tweaks\TerminalTweak\TerminalWrapper.cs" />
+    <Compile Include="Utils\EOSTerminalUtils.Misc.cs" />
+    <Compile Include="Utils\EOSTerminalUtils.Password.cs" />
+    <Compile Include="Utils\EOSUtils.cs" />
+    <Compile Include="Utils\EOSTerminalUtils.UniqueCommands.cs" />
+    <Compile Include="Utils\Color.cs" />
+    <Compile Include="Utils\VanillaTMPPros.cs" />
+    <Compile Include="Utils\Vec4.cs" />
+    <Compile Include="Utils\Vec3.cs" />
+    <Compile Include="Utils\EOSLogger.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Dependencies.props" />
+  </ItemGroup>
+</Project>

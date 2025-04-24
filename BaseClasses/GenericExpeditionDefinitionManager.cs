@@ -9,7 +9,7 @@ namespace ExtraObjectiveSetup.BaseClasses
 {
     public abstract class GenericExpeditionDefinitionManager<T> where T: new()
     {
-        public uint CurrentMainLevelLayout => RundownManager.ActiveExpedition.LevelLayoutData;
+        public uint CurrentMainLevelLayout => RundownManager.ActiveExpedition?.LevelLayoutData ?? 0;
 
         protected Dictionary<uint, GenericExpeditionDefinition<T>> definitions { get; set; } = new();
 

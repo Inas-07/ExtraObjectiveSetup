@@ -56,5 +56,6 @@ namespace ExtraObjectiveSetup.JSON
                 EOSLogger.Error($"Exception thrown while reading path from DataDumper (MTFO): \n{e}");
             }
         }
+
     }
 }

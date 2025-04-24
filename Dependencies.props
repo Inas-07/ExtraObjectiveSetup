@@ -5,7 +5,8 @@
     <!--<GameFolder>C:\Users\vcc\Desktop\GTFO_Assemblies</GameFolder>-->
     <BIELibsFolder>$(GameFolder)\BepInEx\core</BIELibsFolder>
     <DotnetFolder>$(GameFolder)\dotnet</DotnetFolder>
-    <CorLibsFolder>$(DotnetFolder)\corlib</CorLibsFolder>
+    <BIECacheFolder>$(GameFolder)\BepInEx\cache</BIECacheFolder>
+    <CorLibsFolder>$(DotnetFolder)</CorLibsFolder>
     <InteropFolder>$(GameFolder)\BepInEx\interop</InteropFolder>
     <PluginsFolder>$(GameFolder)\BepInEx\plugins</PluginsFolder>
   </PropertyGroup>
@@ -20,8 +21,10 @@
 
   <!-- CorLibs -->
   <ItemGroup>
-    <Reference Include="$(CorLibsFolder)\*.dll" Private="false" />
+    <!--<Reference Include="$(CorLibsFolder)\*.dll" Private="false" />-->
     <!--<Reference Include="$(CorLibsFolder)\System.Private.CoreLib.dll" Private="false" />-->
+    <!--<Reference Include="$(CorLibsFolder)\*.dll" Private="false" />
+    <Reference Include="$(DotNetFolder)\System.Private.CoreLib.dll" Private="false" />-->
   </ItemGroup>
 
   <!-- Interop -->
@@ -40,6 +43,13 @@
 
   <!-- soft dependency -->
   <ItemGroup>
+    <!--should at least include one of them-->  
+    <Reference Include="$(PluginsFolder)/AWOPartialDataFixer.dll" Private="false" />
+    <!--<Reference Include="$(PluginsFolder)/MTFO.Ext.PartialData.dll" Private="false" />-->
+    
+    <Reference Include="$(PluginsFolder)/InjectLib.dll" Private="false" />
+    <!--<Reference Include="$(BIECacheFolder)\Il2CppJsonNet.dll" Private="false" />-->
+
   </ItemGroup>
 
 </Project>
