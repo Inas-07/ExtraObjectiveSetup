@@ -8,21 +8,24 @@ namespace ExtraObjectiveSetup.Patches.LGFactory
     [HarmonyPatch]
     internal class Patch_LG_Factory_NextBatch
     {
-        [HarmonyPostfix]
+        [HarmonyPrefix]
+        [HarmonyWrapSafe]
         [HarmonyPatch(typeof(LG_Factory), nameof(LG_Factory.NextBatch))]
-        private static void Post_LG_Factory_NextBatch(LG_Factory __instance)
+        private static void Prefix(LG_Factory __instance)
         {
-            int lastBatchStep = __instance.m_batchStep - 1;
-            if (lastBatchStep < 0) return;
-
-            var lastBatchName = __instance.m_batches[lastBatchStep].m_batchName;
-            Action onBatchDone = BatchBuildManager.Current.Get_OnBatchDone(lastBatchName); 
-
-            if(onBatchDone != null)
+            if(__instance.m_batchStep > -1)
             {
-                EOSLogger.Warning($"On Batch '{lastBatchName}' Done: {onBatchDone.GetInvocationList().Length} injected jobs");
-                onBatchDone();
+                var lastBatch = __instance.m_currentBatchName;
+                BatchBuildManager.Current.Get_OnBatchDone(lastBatch)?.Invoke();
             }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyWrapSafe]
+        [HarmonyPatch(typeof(LG_Factory), nameof(LG_Factory.NextBatch))]
+        private static void Postfix(LG_Factory __instance)
+        {
+            BatchBuildManager.Current.Get_OnBatchStart(__instance.m_currentBatchName)?.Invoke();
         }
     }
 }

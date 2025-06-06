@@ -2,6 +2,7 @@
 using Gear;
 using Player;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace ExtraObjectiveSetup.Expedition.Gears
@@ -10,24 +11,24 @@ namespace ExtraObjectiveSetup.Expedition.Gears
     {
         public static ExpeditionGearManager Current { get; private set; } = new();
 
-        public GearManager vanillaGearManager { internal set; get; } = null; // setup in patch: GearManager.LoadOfflineGearDatas
+        public GearManager VanillaGearManager { internal set; get; } = null; // setup in patch: GearManager.LoadOfflineGearDatas
 
         private Mode mode = Mode.DISALLOW;
 
         private HashSet<uint> GearIds = new();
 
-        internal readonly List<(InventorySlot inventorySlot, Dictionary<uint, GearIDRange> loadedGears)> gearSlots = new() {
+        public readonly IList<(InventorySlot inventorySlot, Dictionary<uint, GearIDRange> loadedGears)> GearSlots = new List<(InventorySlot, Dictionary<uint, GearIDRange>)>() {
             (InventorySlot.GearStandard, new()),
             (InventorySlot.GearSpecial, new()),
             (InventorySlot.GearMelee, new()),
             (InventorySlot.GearClass, new()),
-        };
+        }.ToImmutableList();
 
         private void ClearLoadedGears()
         {
-            foreach (var slot in gearSlots)
+            foreach (var slot in GearSlots)
             {
-                vanillaGearManager.m_gearPerSlot[(int)slot.inventorySlot].Clear();
+                VanillaGearManager.m_gearPerSlot[(int)slot.inventorySlot].Clear();
             }
         }
 
@@ -45,9 +46,9 @@ namespace ExtraObjectiveSetup.Expedition.Gears
 
         private void AddGearForCurrentExpedition()
         {
-            foreach (var slot in gearSlots)
+            foreach (var slot in GearSlots)
             {
-                var vanillaSlot = vanillaGearManager.m_gearPerSlot[(int)slot.inventorySlot];
+                var vanillaSlot = VanillaGearManager.m_gearPerSlot[(int)slot.inventorySlot];
                 var loadedGearsInCategory = slot.loadedGears;
 
                 if (loadedGearsInCategory.Count == 0)
@@ -74,17 +75,24 @@ namespace ExtraObjectiveSetup.Expedition.Gears
 
         private void ResetPlayerSelectedGears()
         {
-            vanillaGearManager.RescanFavorites();
-            foreach (var gearSlot in gearSlots)
+            VanillaGearManager.RescanFavorites();
+            foreach (var gearSlot in GearSlots)
             {
                 var inventorySlotIndex = (int)gearSlot.inventorySlot;
 
-                if (vanillaGearManager.m_lastEquippedGearPerSlot[inventorySlotIndex] != null)
-                    PlayerBackpackManager.EquipLocalGear(vanillaGearManager.m_lastEquippedGearPerSlot[inventorySlotIndex]);
-                else if (vanillaGearManager.m_favoriteGearPerSlot[inventorySlotIndex].Count > 0)
-                    PlayerBackpackManager.EquipLocalGear(vanillaGearManager.m_favoriteGearPerSlot[inventorySlotIndex][0]);
-                else if (vanillaGearManager.m_gearPerSlot[inventorySlotIndex].Count > 0)
-                    PlayerBackpackManager.EquipLocalGear(vanillaGearManager.m_gearPerSlot[inventorySlotIndex][0]);
+                try
+                {
+                    if (VanillaGearManager.m_lastEquippedGearPerSlot[inventorySlotIndex] != null)
+                        PlayerBackpackManager.EquipLocalGear(VanillaGearManager.m_lastEquippedGearPerSlot[inventorySlotIndex]);
+                    else if (VanillaGearManager.m_favoriteGearPerSlot[inventorySlotIndex].Count > 0)
+                        PlayerBackpackManager.EquipLocalGear(VanillaGearManager.m_favoriteGearPerSlot[inventorySlotIndex][0]);
+                    else if (VanillaGearManager.m_gearPerSlot[inventorySlotIndex].Count > 0)
+                        PlayerBackpackManager.EquipLocalGear(VanillaGearManager.m_gearPerSlot[inventorySlotIndex][0]);
+                }
+                catch (Il2CppInterop.Runtime.Il2CppException e)
+                {
+                    EOSLogger.Error($"Error attempting to equip gear for slot {gearSlot.inventorySlot}:\n{e.StackTrace}");
+                }
             }
         }
 

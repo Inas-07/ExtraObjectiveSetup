@@ -12,9 +12,9 @@ namespace ExtraObjectiveSetup.Patches.Expedition
         [HarmonyPatch(typeof(GearManager), nameof(GearManager.LoadOfflineGearDatas))]
         private static void Post_GearManager_LoadOfflineGearDatas(GearManager __instance)
         {
-            ExpeditionGearManager.Current.vanillaGearManager = __instance;
+            ExpeditionGearManager.Current.VanillaGearManager = __instance;
 
-            foreach (var gearSlot in ExpeditionGearManager.Current.gearSlots)
+            foreach (var gearSlot in ExpeditionGearManager.Current.GearSlots)
             {
                 foreach (GearIDRange gearIDRange in __instance.m_gearPerSlot[(int)gearSlot.inventorySlot])
                 {
