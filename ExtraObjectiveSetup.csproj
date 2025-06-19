@@ -97,6 +97,7 @@
     <Compile Include="Patches\LGFactory\Patch_LG_Factory_Setup.cs" />
     <Compile Include="Patches\Patch_OnRecallDone.cs" />
     <Compile Include="Patches\Terminal\Patch_FixHiddenCommandExecution.cs" />
+    <Compile Include="Patches\Terminal\Patch_FixReactorTerminalNullSpawnNode.cs" />
     <Compile Include="Patches\Terminal\Patch_FixRepeatablePuzzleBugs.cs" />
     <Compile Include="Patches\Terminal\Patch_LG_ComputerTerminal_Setup.cs" />
     <Compile Include="Patches\PowerGenerator\Patch_LG_PowerGeneratorCluster.cs" />

@@ -15,22 +15,9 @@ namespace ExtraObjectiveSetup.Patches.Terminal
         private static void Post_ResetRepeatableUniqueCommandChainedPuzzle(LG_ComputerTerminalCommandInterpreter __instance)
         {
             var terminal = __instance.m_terminal;
-            //var instanceIndex = TerminalInstanceManager.Current.GetZoneInstanceIndex(terminal);
-            //if(instanceIndex == TerminalInstanceManager.INVALID_INSTANCE_INDEX)
-            //{
-            //    EOSLogger.Error($"ResetRepeatableUniqueCommandChainedPuzzle: found an unregistered terminal {terminal.ItemKey}!");
-            //    return;
-            //}
-
-            //var def = TerminalTweakManager.Current.GetDefinition(TerminalInstanceManager.Current.GetGlobalZoneIndex(terminal), instanceIndex);
-            //if(def == null || !def.ResetChainPuzzleForRepeatableCommand)
-            //{
-            //    return;
-            //}
 
             foreach(var CMD in TerminalInstanceManager.UNIQUE_CMDS)
             {
-                
                 if(!__instance.m_commandsPerEnum.ContainsKey(CMD)) 
                 {
                     // vanilla use UniqueCommands only in order,

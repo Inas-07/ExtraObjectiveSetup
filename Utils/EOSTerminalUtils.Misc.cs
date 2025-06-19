@@ -2,8 +2,6 @@
 using GameData;
 using System.Collections.Generic;
 using System;
-using ChainedPuzzles;
-using Il2cppTerminalList = Il2CppSystem.Collections.Generic.List<LevelGeneration.LG_ComputerTerminal>;
 
 namespace ExtraObjectiveSetup.Utils
 {
@@ -72,7 +70,6 @@ namespace ExtraObjectiveSetup.Utils
         /// Obtain list of command events for a specific command. \n
         /// This is a workaround method of terminal.m_command.TryGetCommandEvents:\n 
         /// The method does not work because in the method signature `events` are modified with `out`, and it messes up with il2cppList.\n
-        /// This method extracts command events from level layout data instead.
         /// TODO: add support for reactor terminnal custom command.
         /// </summary>
         /// <param name="terminal"></param>
@@ -84,58 +81,26 @@ namespace ExtraObjectiveSetup.Utils
 
             if (terminal.ConnectedReactor != null) return EMPTY; // reactor terminal
 
-            uint layoutID = 0u;
-            if (terminal.SpawnNode.m_dimension.IsMainDimension)
-            {
-                switch (terminal.SpawnNode.LayerType)
-                {
-                    case LG_LayerType.MainLayer: layoutID = RundownManager.ActiveExpedition.LevelLayoutData; break;
-                    case LG_LayerType.SecondaryLayer: layoutID = RundownManager.ActiveExpedition.SecondaryLayout; break;
-                    case LG_LayerType.ThirdLayer: layoutID = RundownManager.ActiveExpedition.ThirdLayout; break;
-                    default: EOSLogger.Error($"GetCommandEvents: Unimplemented layer type {terminal.SpawnNode.LayerType}"); return EMPTY;
-                }
-            }
-            else
-            {
-                layoutID = terminal.SpawnNode.m_dimension.DimensionData.LevelLayoutData;
-            }
+            // CRITICAL: The order of spawned terminals is the same to the order of terminalplacementdatas in the datablock!
+            var terminalsInZone = terminal.SpawnNode.m_zone.TerminalsSpawnedInZone;
+            int index = terminalsInZone.IndexOf(terminal);
 
-            // __instance.m_commandEventMap.TryGetValue is unusable. Get around this by getting it from gamedatablock.
-            LevelLayoutDataBlock levellayoutData = GameDataBlockBase<LevelLayoutDataBlock>.GetBlock(layoutID);
-            if(levellayoutData == null) 
-            {
-                EOSLogger.Error($"GetCommandEvents: {terminal.ItemKey} is in {terminal.SpawnNode.LayerType}, {terminal.SpawnNode.m_dimension.DimensionIndex} but its LevelLayoutData is not found!");
-                return EMPTY;
-            }
+            ExpeditionZoneData zoneData = terminal.SpawnNode?.m_zone.m_settings.m_zoneData ?? null;
 
-            // CRITICAL: The order of spawning terminals is the same to that of specifying terminalplacementdatas in the datablock!
-            Il2cppTerminalList TerminalsInZone = terminal.SpawnNode.m_zone.TerminalsSpawnedInZone;
-            int TerminalDataIndex = TerminalsInZone.IndexOf(terminal);
-
-            ExpeditionZoneData TargetZoneData = null;
-            foreach (ExpeditionZoneData zonedata in levellayoutData.Zones)
-            {
-                if (zonedata.LocalIndex == terminal.SpawnNode.m_zone.LocalIndex)
-                {
-                    TargetZoneData = zonedata;
-                    break;
-                }
-            }
-
-            if (TargetZoneData == null)
+            if (zoneData == null)
             {
                 EOSLogger.Error("GetCommandEvents: Cannot find target zone data.");
                 return EMPTY;
             }
 
-            if (TerminalDataIndex >= TargetZoneData.TerminalPlacements.Count)
+            if (index < 0 || index >= zoneData.TerminalPlacements.Count)
             {
-                EOSLogger.Debug("GetCommandEvents: TerminalDataIndex >= TargetZoneData.TerminalPlacements.Count: found a custom terminal, skipped");
+                EOSLogger.Debug($"GetCommandEvents: TerminalDataIndex({index}), TargetZoneData.TerminalPlacements.Count == ({zoneData.TerminalPlacements.Count}) - maybe a custom terminal, skipped");
                 return EMPTY;
             }
 
-            var UniqueCommands = TargetZoneData.TerminalPlacements[TerminalDataIndex].UniqueCommands;
-            foreach(var cmd in UniqueCommands)
+            var uniqueCommands = zoneData.TerminalPlacements[index].UniqueCommands;
+            foreach(var cmd in uniqueCommands)
             {
                 if (cmd.Command.ToLower().Equals(command.ToLower()))
                 {
