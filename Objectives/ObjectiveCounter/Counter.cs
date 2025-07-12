@@ -47,10 +47,7 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
                 ReachTo(count);
             }
 
-            if(SNet.IsMaster)
-            {
-                StateReplicator.SetState(new() { Count = target });
-            }
+            StateReplicator.SetStateUnsynced(new() { Count = target });
         }
 
         public void Decrement(int by)
@@ -63,10 +60,7 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
                 ReachTo(count);
             }
 
-            if (SNet.IsMaster)
-            {
-                StateReplicator.SetState(new() { Count = target });
-            }
+            StateReplicator.SetStateUnsynced(new() { Count = target });
         }
 
         internal bool TrySetupReplicator()
