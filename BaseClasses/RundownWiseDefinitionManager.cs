@@ -67,10 +67,17 @@ namespace ExtraObjectiveSetup.BaseClasses
 
             foreach (string confFile in Directory.EnumerateFiles(DEFINITION_PATH, "*.json", SearchOption.AllDirectories))
             {
-                string content = File.ReadAllText(confFile);
-                var conf = EOSJson.Deserialize<RundownWiseDefinition<T>>(content);
-
-                AddDefinitions(conf);
+                try
+                {
+                    string content = File.ReadAllText(confFile);
+                    var conf = EOSJson.Deserialize<RundownWiseDefinition<T>>(content);
+                    AddDefinitions(conf);
+                }
+                catch (Exception ex)
+                {
+                    EOSLogger.Error($"RundownWiseDefinitionManager: an exception was thrown while reading files:\n{ex}");
+                    continue;
+                }
             }
 
             liveEditListener = LiveEdit.CreateListener(DEFINITION_PATH, "*.json", true);
