@@ -67,10 +67,17 @@ namespace ExtraObjectiveSetup.Expedition
 
             foreach (string confFile in Directory.EnumerateFiles(DEFINITION_PATH, "*.json", SearchOption.AllDirectories))
             {
-                string content = File.ReadAllText(confFile);
-                ExpeditionDefinition conf = EOSJson.Deserialize<ExpeditionDefinition>(content);
-
-                AddDefinitions(conf);
+                try
+                {
+                    string content = File.ReadAllText(confFile);
+                    ExpeditionDefinition conf = EOSJson.Deserialize<ExpeditionDefinition>(content);
+                    AddDefinitions(conf);
+                }
+                catch (Exception ex)
+                {
+                    EOSLogger.Error($"ExpeditionDefinitionManager: an exception was thrown while reading files:\n{ex}");
+                    continue;
+                }
             }
 
             liveEditListener = LiveEdit.CreateListener(DEFINITION_PATH, "*.json", true);

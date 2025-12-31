@@ -14,13 +14,14 @@ namespace ExtraObjectiveSetup
     [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(MTFOPartialDataUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(InjectLibUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.sinai.unityexplorer", BepInDependency.DependencyFlags.SoftDependency)] // try prevent CTD
     [BepInPlugin(AUTHOR + "." + PLUGIN_NAME, PLUGIN_NAME, VERSION)]
-    
+    [BepInIncompatibility("Amor.ExcellentObjectiveSetup")]
     public class EntryPoint: BasePlugin
     {
         public const string AUTHOR = "Inas";
         public const string PLUGIN_NAME = "ExtraObjectiveSetup";
-        public const string VERSION = "1.6.10";
+        public const string VERSION = "1.6.11";
 
         private Harmony m_Harmony;
         
