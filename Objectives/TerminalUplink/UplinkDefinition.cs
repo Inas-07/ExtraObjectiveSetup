@@ -60,6 +60,8 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 
     public class UplinkDefinition : BaseInstanceDefinition
     {
+        public int WardenObjectiveIndex { get; set; } = -1;
+
         public bool DisplayUplinkWarning { get; set; } = true;
 
         public bool SetupAsCorruptedUplink { get; set; } = false;

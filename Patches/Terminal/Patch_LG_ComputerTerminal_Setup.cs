@@ -32,5 +32,13 @@ namespace ExtraObjectiveSetup.Patches.Terminal
 
             EOSLogger.Debug($"TerminalPositionOverride: {_override.LocalIndex}, {_override.LayerType}, {_override.DimensionIndex}, TerminalIndex {_override.InstanceIndex}");
         }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(LG_ComputerTerminal), nameof(LG_ComputerTerminal.SetupAsWardenObjectiveTerminalUplink))]
+        [HarmonyPatch(typeof(LG_ComputerTerminal), nameof(LG_ComputerTerminal.SetupAsWardenObjectiveCorruptedTerminalUplink))]
+        private static void Post_LG_ComputerTerminal_UplinkSetup(LG_ComputerTerminal __instance)
+        {
+            TerminalInstanceManager.Current.RegisterWardenUplink(__instance);
+        }
     }
 }

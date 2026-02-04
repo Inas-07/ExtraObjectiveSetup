@@ -36,7 +36,16 @@ namespace ExtraObjectiveSetup.Instances
         // key: ChainedPuzzleInstance.Pointer
         private Dictionary<IntPtr, LG_ComputerTerminal> UniqueCommandChainPuzzles { get; } = new();
 
+        private Dictionary<LG_LayerType, List<LG_ComputerTerminal>> WardenUplinks { get; } = new();
+
         private Dictionary<IntPtr, TerminalWrapper> Wrappers { get; } = new();
+
+        public LG_ComputerTerminal GetWardenUplink(LG_LayerType layer, int objectiveIndex)
+        {
+            if (WardenUplinks.TryGetValue(layer, out var list))
+                return objectiveIndex >= 0 && objectiveIndex < list.Count ? list[objectiveIndex] : null;
+            return null;
+        }
 
         public override (eDimensionIndex dim, LG_LayerType layer, eLocalZoneIndex zone) GetGlobalZoneIndex(LG_ComputerTerminal instance)
         {
@@ -86,6 +95,15 @@ namespace ExtraObjectiveSetup.Instances
             return index;
         }
 
+        public int RegisterWardenUplink(LG_ComputerTerminal terminal)
+        {
+            var layer = terminal.SpawnNode.LayerType;
+            if (!WardenUplinks.TryGetValue(layer, out var list))
+                WardenUplinks.Add(layer, list = new());
+            list.Add(terminal);
+            return list.Count - 1;
+        }
+
         public void SetupTerminalWrapper(LG_ComputerTerminal terminal)
         {
             if(Wrappers.ContainsKey(terminal.Pointer))
@@ -111,6 +129,7 @@ namespace ExtraObjectiveSetup.Instances
         {
             UniqueCommandChainPuzzles.Clear();
             Wrappers.Clear();
+            WardenUplinks.Clear();
         }
 
         private void GatherUniqueCommandChainPuzzles()
