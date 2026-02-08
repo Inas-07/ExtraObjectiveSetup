@@ -22,7 +22,7 @@ namespace ExtraObjectiveSetup.Patches.Uplink
             if (!corrupted)
             {
                 var uplinkTerminal = __instance.m_terminal;
-                if (uplinkTerminal.m_isWardenObjective) return true; // vanilla uplink
+                if (uplinkTerminal.m_isWardenObjective) return true;
 
                 var globalIndex = TerminalInstanceManager.Current.GetGlobalZoneIndex(uplinkTerminal);
                 var instanceIndex = TerminalInstanceManager.Current.GetZoneInstanceIndex(uplinkTerminal);
@@ -83,5 +83,49 @@ namespace ExtraObjectiveSetup.Patches.Uplink
             return false;
         }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(LG_ComputerTerminalCommandInterpreter), nameof(LG_ComputerTerminalCommandInterpreter.StartTerminalUplinkSequence))]
+        private static void Post_LG_ComputerTerminalCommandInterpreter_StartTerminalUplinkSequence(LG_ComputerTerminalCommandInterpreter __instance, bool corrupted)
+        {
+            // normal uplink
+            if (!corrupted)
+            {
+                var uplinkTerminal = __instance.m_terminal;
+                if (!uplinkTerminal.m_isWardenObjective) return;
+
+                var uplinkConfig = UplinkObjectiveManager.Current.GetWardenDefinition(__instance.m_terminal);
+                if (uplinkConfig == null) return;
+
+                uplinkTerminal.m_command.OnEndOfQueue += new System.Action(() =>
+                {
+                    uplinkConfig.EventsOnCommence.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
+
+                    int i = uplinkConfig.RoundOverrides.FindIndex(o => o.RoundIndex == 0);
+                    UplinkRound firstRoundOverride = i != -1 ? uplinkConfig.RoundOverrides[i] : null;
+                    firstRoundOverride?.EventsOnRound.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.OnStart, false));
+                });
+            }
+            // corruplink
+            else
+            {
+                // corruplink
+                var receiver = __instance.m_terminal;
+                var sender = __instance.m_terminal.CorruptedUplinkReceiver;
+
+                if (!sender.m_isWardenObjective) return; // vanilla uplink
+
+                var uplinkConfig = UplinkObjectiveManager.Current.GetWardenDefinition(sender);
+                if (uplinkConfig == null) return;
+
+                receiver.m_command.OnEndOfQueue = new System.Action(() =>
+                {
+                    uplinkConfig.EventsOnCommence.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
+
+                    int i = uplinkConfig.RoundOverrides.FindIndex(o => o.RoundIndex == 0);
+                    UplinkRound firstRoundOverride = i != -1 ? uplinkConfig.RoundOverrides[i] : null;
+                    firstRoundOverride?.EventsOnRound.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.OnStart, false));
+                });
+            }
+        }
     }
 }

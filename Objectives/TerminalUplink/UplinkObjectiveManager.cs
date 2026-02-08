@@ -23,6 +23,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
         private TextDataBlock UplinkAddrLogContentBlock = null;
 
         private Dictionary<IntPtr, StateReplicator<UplinkState>> stateReplicators = new();
+        private Dictionary<IntPtr, UplinkDefinition> wardenUplinkDefs { get; } = new();
 
         private List<UplinkRound> builtRoundPuzzles = new();
 
@@ -37,13 +38,35 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
             base.AddDefinitions(definitions);
         }
 
+        public UplinkDefinition GetWardenDefinition(LG_ComputerTerminal terminal) => wardenUplinkDefs.GetValueOrDefault(terminal.Pointer);
+
+        private void Enter(UplinkDefinition def)
+        {
+            if (def.WardenObjectiveIndex < 0) return;
+
+            var uplinkTerminal = TerminalInstanceManager.Current.GetWardenUplink(def.LayerType, def.WardenObjectiveIndex);
+            if (uplinkTerminal == null || !uplinkTerminal.m_isWardenObjective || uplinkTerminal.UplinkPuzzle == null)
+            {
+                EOSLogger.Error($"BuildUplink: warden objective uplink not built, aborting!");
+                return;
+            }
+
+            wardenUplinkDefs.TryAdd(uplinkTerminal.Pointer, def);
+            uplinkTerminal.UplinkPuzzle.OnPuzzleSolved += new Action(() =>
+            {
+                def.EventsOnComplete?.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
+            });
+        }
+
         private void Build(UplinkDefinition def)
         {
-            LG_ComputerTerminal uplinkTerminal = TerminalInstanceManager.Current.GetInstance(def.DimensionIndex, def.LayerType, def.LocalIndex, def.InstanceIndex);
+            if (def.WardenObjectiveIndex >= 0) return;
 
-            if(uplinkTerminal == null) return;
+            var uplinkTerminal = TerminalInstanceManager.Current.GetInstance(def.DimensionIndex, def.LayerType, def.LocalIndex, def.InstanceIndex);
 
-            if (uplinkTerminal.m_isWardenObjective && uplinkTerminal.UplinkPuzzle != null)
+            if (uplinkTerminal == null) return;
+
+            if (uplinkTerminal.m_isWardenObjective)
             {
                 EOSLogger.Error($"BuildUplink: terminal uplink already built (by vanilla or custom build), aborting!");
                 return;
@@ -312,6 +335,13 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
             definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(Build);
         }
 
+        private void OnEnterLevel()
+        {
+            if (!definitions.ContainsKey(RundownManager.ActiveExpedition.LevelLayoutData)) return;
+
+            definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(Enter);
+        }
+
         private void Clear()
         {
             //if (!definitions.ContainsKey(RundownManager.ActiveExpedition.LevelLayoutData)) return;
@@ -321,6 +351,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 
             builtRoundPuzzles.ForEach(r => { r.ChainedPuzzleToEndRoundInstance = null; });
             builtRoundPuzzles.Clear();
+            wardenUplinkDefs.Clear();
             stateReplicators.Clear();
         }
 
@@ -332,6 +363,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
         private UplinkObjectiveManager() : base() 
         {
             LevelAPI.OnBuildDone += OnBuildDone;
+            LevelAPI.OnEnterLevel += OnEnterLevel;
             LevelAPI.OnLevelCleanup += Clear;
             LevelAPI.OnBuildStart += Clear;
         }

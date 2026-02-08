@@ -7,6 +7,7 @@ using ExtraObjectiveSetup.Objectives.TerminalUplink;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.Utils;
 using SNetwork;
+using System.Collections.Generic;
 
 namespace ExtraObjectiveSetup.Patches.Uplink
 {
@@ -15,9 +16,24 @@ namespace ExtraObjectiveSetup.Patches.Uplink
     {
         [HarmonyPrefix]
         [HarmonyPatch(typeof(LG_ComputerTerminalCommandInterpreter), nameof(LG_ComputerTerminalCommandInterpreter.TerminalUplinkVerify))]
-        private static bool Pre_LG_ComputerTerminalCommandInterpreter_TerminalUplinkVerify(LG_ComputerTerminalCommandInterpreter __instance, string param1, string param2, ref bool __result)
+        private static bool Pre_LG_ComputerTerminalCommandInterpreter_TerminalUplinkVerify(LG_ComputerTerminalCommandInterpreter __instance, string param1, string param2, ref bool __result, out List<WardenObjectiveEventData> __state)
         {
-            if (__instance.m_terminal.m_isWardenObjective) return true; // vanilla uplink
+            __state = null;
+            if (__instance.m_terminal.m_isWardenObjective) // vanilla uplink
+            {
+                var wardenConfig = UplinkObjectiveManager.Current.GetWardenDefinition(__instance.m_terminal);
+                if (wardenConfig == null) return true;
+
+                var puzzle = __instance.m_terminal.UplinkPuzzle;
+                if (puzzle.Connected && !puzzle.Solved && puzzle.CurrentRound.CorrectCode.ToUpper() == param1.ToUpper())
+                {
+                    __state = wardenConfig.RoundOverrides.Find(round => round.RoundIndex == puzzle.m_roundIndex + 1)?.EventsOnRound;
+                    var currentRound = wardenConfig.RoundOverrides.Find(round => round.RoundIndex == puzzle.m_roundIndex);
+
+                    currentRound?.EventsOnRound.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.OnMid, false));
+                }
+                return true;
+            }
                                                                         // corr log is sent in TerminalUplinkPuzzle.
             var uplinkPuzzle = __instance.m_terminal.UplinkPuzzle;
 
@@ -165,5 +181,15 @@ namespace ExtraObjectiveSetup.Patches.Uplink
             return false;
         }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(LG_ComputerTerminalCommandInterpreter), nameof(LG_ComputerTerminalCommandInterpreter.TerminalUplinkVerify))]
+        private static void Post_LG_ComputerTerminalCommandInterpreter_TerminalUplinkVerify(LG_ComputerTerminalCommandInterpreter __instance, List<WardenObjectiveEventData> __state)
+        {
+            if (__state == null) return;
+
+            __instance.OnEndOfQueue += new System.Action(() => 
+                __state.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.OnStart, false))
+            );
+        }
     }
 }
