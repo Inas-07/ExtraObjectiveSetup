@@ -3,6 +3,7 @@ using LevelGeneration;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.Tweaks.TerminalPosition;
 using ExtraObjectiveSetup.Utils;
+using ExtraObjectiveSetup.Objectives.TerminalUplink;
 
 namespace ExtraObjectiveSetup.Patches.Terminal
 {
@@ -39,6 +40,21 @@ namespace ExtraObjectiveSetup.Patches.Terminal
         private static void Post_LG_ComputerTerminal_UplinkSetup(LG_ComputerTerminal __instance)
         {
             TerminalInstanceManager.Current.RegisterWardenUplink(__instance);
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(TerminalUplinkPuzzle), nameof(TerminalUplinkPuzzle.Setup))]
+        private static void Post_LG_ComputerTerminal_SyncedPuzzle(TerminalUplinkPuzzle __instance, LG_ComputerTerminal terminal)
+        {
+            if (!terminal.m_isWardenObjective) return;
+
+            var def = UplinkObjectiveManager.Current.GetWardenDefinition(terminal);
+            if (def == null) return;
+
+            __instance.OnPuzzleSolved += new System.Action(() =>
+            {
+                def.EventsOnComplete?.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, GameData.eWardenObjectiveEventTrigger.None, true));
+            });
         }
     }
 }
