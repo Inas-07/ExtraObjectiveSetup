@@ -40,27 +40,20 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 
         public UplinkDefinition GetWardenDefinition(LG_ComputerTerminal terminal) => wardenUplinkDefs.GetValueOrDefault(terminal.Pointer);
 
-        private void Enter(UplinkDefinition def)
-        {
-            if (def.WardenObjectiveIndex < 0) return;
-
-            var uplinkTerminal = TerminalInstanceManager.Current.GetWardenUplink(def.LayerType, def.WardenObjectiveIndex);
-            if (uplinkTerminal == null || !uplinkTerminal.m_isWardenObjective || uplinkTerminal.UplinkPuzzle == null)
-            {
-                EOSLogger.Error($"BuildUplink: warden objective uplink not built, aborting!");
-                return;
-            }
-
-            wardenUplinkDefs.TryAdd(uplinkTerminal.Pointer, def);
-            uplinkTerminal.UplinkPuzzle.OnPuzzleSolved += new Action(() =>
-            {
-                def.EventsOnComplete?.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
-            });
-        }
-
         private void Build(UplinkDefinition def)
         {
-            if (def.WardenObjectiveIndex >= 0) return;
+            if (def.WardenObjectiveIndex >= 0)
+            {
+                var wardenTerminal = TerminalInstanceManager.Current.GetWardenUplink(def.LayerType, def.WardenObjectiveIndex);
+                if (wardenTerminal == null || !wardenTerminal.m_isWardenObjective || (wardenTerminal.WardenObjectiveType != TERM_WO_Type.Uplink && wardenTerminal.WardenObjectiveType != TERM_WO_Type.CorruptedUplink))
+                {
+                    EOSLogger.Error($"BuildUplink: warden objective uplink not built, aborting! (Null: {wardenTerminal == null}, IsWarden: {wardenTerminal?.m_isWardenObjective}, ObjectiveType: {wardenTerminal?.WardenObjectiveType})");
+                    return;
+                }
+
+                wardenUplinkDefs.TryAdd(wardenTerminal.Pointer, def);
+                return;
+            }
 
             var uplinkTerminal = TerminalInstanceManager.Current.GetInstance(def.DimensionIndex, def.LayerType, def.LocalIndex, def.InstanceIndex);
 
@@ -335,13 +328,6 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
             definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(Build);
         }
 
-        private void OnEnterLevel()
-        {
-            if (!definitions.ContainsKey(RundownManager.ActiveExpedition.LevelLayoutData)) return;
-
-            definitions[RundownManager.ActiveExpedition.LevelLayoutData].Definitions.ForEach(Enter);
-        }
-
         private void Clear()
         {
             //if (!definitions.ContainsKey(RundownManager.ActiveExpedition.LevelLayoutData)) return;
@@ -363,7 +349,6 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
         private UplinkObjectiveManager() : base() 
         {
             LevelAPI.OnBuildDone += OnBuildDone;
-            LevelAPI.OnEnterLevel += OnEnterLevel;
             LevelAPI.OnLevelCleanup += Clear;
             LevelAPI.OnBuildStart += Clear;
         }
