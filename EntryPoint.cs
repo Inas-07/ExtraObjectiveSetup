@@ -22,7 +22,7 @@ namespace ExtraObjectiveSetup
     {
         public const string AUTHOR = "Inas";
         public const string PLUGIN_NAME = "ExtraObjectiveSetup";
-        public const string VERSION = "1.6.14";
+        public const string VERSION = "1.6.15";
 
         private Harmony m_Harmony;
         

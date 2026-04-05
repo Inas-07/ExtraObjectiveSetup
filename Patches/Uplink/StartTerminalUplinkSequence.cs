@@ -117,7 +117,7 @@ namespace ExtraObjectiveSetup.Patches.Uplink
                 var uplinkConfig = UplinkObjectiveManager.Current.GetWardenDefinition(sender);
                 if (uplinkConfig == null) return;
 
-                receiver.m_command.OnEndOfQueue = new System.Action(() =>
+                receiver.m_command.OnEndOfQueue += new System.Action(() =>
                 {
                     uplinkConfig.EventsOnCommence.ForEach(e => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(e, eWardenObjectiveEventTrigger.None, true));
 
