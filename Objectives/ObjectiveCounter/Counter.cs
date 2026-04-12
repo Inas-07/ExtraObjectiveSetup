@@ -49,8 +49,11 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
             if (def.IsCapped)
             {
                 int upperLimit = def.OnReached.Max(x => x.Count);
-                if (target > upperLimit) target = upperLimit;
-                EOSLogger.Warning($"ChangeCounter: Count upper limit reached. Setting current count to {target}.");
+                if (target > upperLimit)
+				{
+					target = upperLimit;
+                	EOSLogger.Warning($"ChangeCounter: Count upper limit reached. Setting current count to {target}.");
+				}
 			}
 
             for(int count = CurrentCount + 1; count <= target; count++)
@@ -70,8 +73,11 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 			if (def.IsCapped)
 			{
 				int lowerLimit = def.OnReached.Min(x => x.Count);
-				if (target < lowerLimit) target = lowerLimit;
-				EOSLogger.Warning($"ChangeCounter: Count lower limit reached. Setting current count to {target}.");
+				if (target < lowerLimit)
+				{
+					target = lowerLimit;
+					EOSLogger.Warning($"ChangeCounter: Count lower limit reached. Setting current count to {target}.");
+				}
 			}
 			
             for (int count = CurrentCount - 1; count >= target; count--)
