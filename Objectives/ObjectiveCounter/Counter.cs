@@ -1,4 +1,7 @@
-﻿using ExtraObjectiveSetup.Utils;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using ExtraObjectiveSetup.Utils;
 using FloLib.Networks.Replications;
 using GTFO.API.Extensions;
 using SNetwork;
@@ -42,6 +45,17 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
             if (by <= 0) return;
 
             int target = CurrentCount + by;
+
+            if (def.IsCapped)
+            {
+                int upperLimit = def.OnReached.Max(x => x.Count);
+                if (target > upperLimit)
+				{
+					target = upperLimit;
+                	EOSLogger.Warning($"ChangeCounter: Count upper limit reached. Setting current count to {target}.");
+				}
+			}
+
             for(int count = CurrentCount + 1; count <= target; count++)
             {
                 ReachTo(count);
@@ -55,6 +69,17 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
             if (by <= 0) return;
 
             int target = CurrentCount - by;
+
+			if (def.IsCapped)
+			{
+				int lowerLimit = def.OnReached.Min(x => x.Count);
+				if (target < lowerLimit)
+				{
+					target = lowerLimit;
+					EOSLogger.Warning($"ChangeCounter: Count lower limit reached. Setting current count to {target}.");
+				}
+			}
+			
             for (int count = CurrentCount - 1; count >= target; count--)
             {
                 ReachTo(count);
@@ -62,6 +87,20 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 
             StateReplicator.SetStateUnsynced(new() { Count = target });
         }
+
+        public void SetTo(int to)
+        {
+            if (def.IsCapped)
+            {
+				int upperLimit = def.OnReached.Max(x => x.Count);
+				int lowerLimit = def.OnReached.Min(x => x.Count);
+
+				to = Math.Clamp(to, lowerLimit, upperLimit);
+			}
+
+            ReachTo(to);
+			StateReplicator.SetStateUnsynced(new() { Count = to });
+		}
 
         internal bool TrySetupReplicator()
         {

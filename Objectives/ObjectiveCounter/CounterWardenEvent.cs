@@ -2,6 +2,7 @@
 {
     public enum CounterWardenEvent
     {
-        ChangeCounter = 500
+        ChangeCounter = 500,
+        SetCounter = 501
     }
 }

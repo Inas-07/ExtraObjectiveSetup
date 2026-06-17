@@ -4,6 +4,7 @@ using ExtraObjectiveSetup.Utils;
 using GameData;
 using GTFO.API;
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
@@ -63,6 +64,25 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
             ChangeCounter(worldEventObjectFilter, by);
         }
 
+        private void SetCounter(string worldEventObjectFilter, int to)
+        {
+			if (!Counters.ContainsKey(worldEventObjectFilter))
+			{
+				EOSLogger.Error($"SetCounter: {worldEventObjectFilter} is not defined");
+				return;
+			}
+
+            var counter = Counters[worldEventObjectFilter];
+            counter.SetTo(to);
+		}
+
+        private void SetCounter(WardenObjectiveEventData e)
+        {
+			string worldEventObjectFilter = e.WorldEventObjectFilter;
+			int to = e.Count;
+			SetCounter(worldEventObjectFilter, to);
+		}
+
         private void BuildCounters()
         {
             if (!definitions.ContainsKey(CurrentMainLevelLayout)) return;
@@ -80,8 +100,9 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
             LevelAPI.OnLevelCleanup += Clear;
             LevelAPI.OnBuildDone += BuildCounters;
             EOSWardenEventManager.Current.AddEventDefinition(CounterWardenEvent.ChangeCounter.ToString(), (uint)CounterWardenEvent.ChangeCounter, ChangeCounter);
-                        
-        }
+			EOSWardenEventManager.Current.AddEventDefinition(CounterWardenEvent.SetCounter.ToString(), (uint)CounterWardenEvent.SetCounter, SetCounter);
+
+		}
 
         static ObjectiveCounterManager() { }
     }

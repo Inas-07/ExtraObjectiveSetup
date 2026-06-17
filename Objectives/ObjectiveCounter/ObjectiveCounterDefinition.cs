@@ -17,6 +17,8 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 
         public int StartingCount { get; set; } = 0;
 
-        public List<OnCounter> OnReached { get; set; } = new() { new() };
+		public bool IsCapped { get; set; } = false;
+
+		public List<OnCounter> OnReached { get; set; } = new() { new() };
     }
 }
