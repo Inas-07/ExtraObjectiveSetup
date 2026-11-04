@@ -78,7 +78,16 @@ namespace ExtraObjectiveSetup.ExtendedWardenEvents
             float delay = UnityEngine.Mathf.Max(e.Delay - currentDuration, 0f);
             if (delay > 0f)
             {
+                int reloadCount = CheckpointManager.CheckpointUsage;
                 yield return new UnityEngine.WaitForSeconds(delay);
+
+                if (GameStateManager.CurrentStateName < eGameStateName.Generating
+                    || GameStateManager.CurrentStateName > eGameStateName.InLevel
+                    || reloadCount < CheckpointManager.CheckpointUsage)
+                {
+                    EOSLogger.Warning($"Delayed event {eventID} aborted due to checkpoint reload, or not in level");
+                    yield break;
+                }
             }
 
             if (WorldEventManager.GetCondition(e.Condition.ConditionIndex) != e.Condition.IsTrue)
