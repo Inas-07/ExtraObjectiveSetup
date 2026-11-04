@@ -25,11 +25,7 @@ namespace ExtraObjectiveSetup.Patches.Terminal
 
             if (_override == null) return;
 
-            if (_override.Position.ToVector3() != UnityEngine.Vector3.zeroVector)
-            {
-                __instance.transform.position = _override.Position.ToVector3();
-                __instance.transform.rotation = _override.Rotation.ToQuaternion();
-            }
+            TerminalPositionOverrideManager.Current.Setup(__instance, _override);
 
             EOSLogger.Debug($"TerminalPositionOverride: {_override.LocalIndex}, {_override.LayerType}, {_override.DimensionIndex}, TerminalIndex {_override.InstanceIndex}");
         }
