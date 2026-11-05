@@ -19,12 +19,16 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 
         public int CurrentRoundIndex { get; set; } = 0;
 
+        // CheckpointUsage when this state was set; used to reroll CorrectIndex after a recall
+        public int RetryCount { get; set; } = 0;
+
         public UplinkState() { }    
 
         public UplinkState(UplinkState o) 
         {
             CurrentRoundIndex = o.CurrentRoundIndex;
             Status = o.Status;
+            RetryCount = o.RetryCount;
         }
     }
 }

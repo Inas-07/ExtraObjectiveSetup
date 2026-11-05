@@ -112,6 +112,7 @@
     <Compile Include="Patches\Uplink\TerminalUplinkSequenceOutput.cs" />
     <Compile Include="Patches\Uplink\TerminalUplinkVerify.cs" />
     <Compile Include="Patches\Uplink\UplinkGUI_Update.cs" />
+    <Compile Include="Patches\Uplink\UplinkPuzzleCodesString.cs" />
     <Compile Include="JSON\EOSJson.cs" />
     <Compile Include="Tweaks\BossEvents\EventsOnZoneBossDeath.cs" />
     <Compile Include="Tweaks\Scout\EventsOnZoneScoutScream.cs" />
