@@ -9,7 +9,7 @@ using System;
 using GTFO.API.Extensions;
 using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.BaseClasses;
-using FloLib.Networks.Replications;
+using AmorLib.Networking.StateReplicators;
 using ExtraObjectiveSetup.Instances.ChainedPuzzle;
 using SNetwork;
 using UnityEngine;
@@ -272,7 +272,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
                 return;
             }
 
-            var replicator = StateReplicator<UplinkState>.Create(replicatorID, new() { Status = UplinkStatus.Unfinished }, LifeTimeType.Level);
+            var replicator = StateReplicator<UplinkState>.Create(replicatorID, new() { Status = UplinkStatus.Unfinished }, LifeTimeType.Session);
             replicator.OnStateChanged += (oldState, newState, isRecall) =>
             {
                 if (oldState.Status == newState.Status) return;
