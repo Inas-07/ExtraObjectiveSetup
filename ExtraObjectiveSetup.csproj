@@ -86,6 +86,7 @@
     <Compile Include="Patches\Expedition\GearManager_LoadOfflineGearDatas.cs" />
     <Compile Include="Patches\Expedition\DisabelMap.cs" />
     <Compile Include="Patches\Expedition\RundownManager_SetActiveExpedition.cs" />
+    <Compile Include="Patches\Expedition\TerminalWrapper_ExpeditionPatches.cs" />
     <Compile Include="Patches\ChainedPuzzle\ChainedPuzzleInstance_OnStateChange.cs" />
     <Compile Include="Patches\HSUActivator\ChainedPuzzleInstance_OnPuzzleSolved.cs" />
     <Compile Include="Patches\HSUActivator\SetupFromCustomGeomorph.cs" />

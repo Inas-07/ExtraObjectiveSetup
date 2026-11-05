@@ -1,8 +1,14 @@
-﻿using ExtraObjectiveSetup.Utils;
+﻿using BepInEx.Unity.IL2CPP.Utils.Collections;
+using ExtraObjectiveSetup.Expedition;
+using ExtraObjectiveSetup.Utils;
 using AmorLib.Networking.StateReplicators;
+using GameData;
+using GTFO.API.Extensions;
 using LevelGeneration;
 using Player;
 using SNetwork;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
 {
@@ -11,6 +17,12 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
         public LG_ComputerTerminal lgTerminal { get; private set; }
 
         public StateReplicator<TerminalState> stateReplicator { get; private set; }
+
+        private ExpeditionTerminalsDefinition expeditionTerminalDefinition { get; set; } = null;
+
+        private readonly Dictionary<string, List<WardenObjectiveEventData>> logFileEvents = new();
+
+        private readonly List<string> logFileNames = new();
 
         private void ChangeStateUnsynced(bool enabled)
         {
@@ -26,16 +38,8 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
                 interact.SetActive(active);
             }
 
-            //GUIX_VirtualSceneLink vsl = lgTerminal.GetComponent<GUIX_VirtualSceneLink>();
-            //if (vsl != null && vsl.m_virtualScene != null)
-            //{
-            //    GUIX_VirtualCamera virtualCamera = vsl.m_virtualScene.virtualCamera;
-            //    virtualCamera.SetFovAndClip(virtualCamera.paramCamera.fieldOfView, active ? 0.3f : 0.0f, active ? 1000f : 0.0f);
-            //}
-
             lgTerminal.m_interfaceScreen.SetActive(active);
             lgTerminal.m_loginScreen.SetActive(active);
-            //lgTerminal.m_screen.SetActive(active); // don't use
 
             if (lgTerminal.m_text != null)
             {
@@ -50,7 +54,6 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
                     lgTerminal.ExitFPSView();
                 }
             }
-
         }
 
         public void ChangeState(bool enabled)
@@ -58,15 +61,117 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
             ChangeStateUnsynced(enabled);
             if (SNet.IsMaster)
             {
-                stateReplicator.SetState(new() { Enabled = enabled });
+                stateReplicator.SetState(stateReplicator.State with { Enabled = enabled });
             }
+        }
+
+        /// <summary>
+        /// Marks the terminal as approached, which is what fires EventsOnApproach.
+        /// </summary>
+        public void ChangeState()
+        {
+            if (!SNet.IsMaster || stateReplicator.State.Approached) return;
+
+            stateReplicator.SetState(stateReplicator.State with { Approached = true });
+        }
+
+        public void ReceiveCommand(TERM_Command cmd, string param)
+        {
+            if (expeditionTerminalDefinition == null)
+                return;
+
+            if (SNet.IsMaster && cmd == TERM_Command.ReadLog)
+                ChangeState(param);
+
+            if (cmd == TERM_Command.TryUnlockingTerminal)
+            {
+                var (events, delay) = lgTerminal.EvaluatePassword(param)
+                    ? (expeditionTerminalDefinition.EventsOnPasswordInputSuccess, 2.8f)
+                    : (expeditionTerminalDefinition.EventsOnPasswordInputFailure, 2.6f);
+                ExecuteEvents(events, delay);
+            }
+        }
+
+        public void ChangeState(string fileName)
+        {
+            int index = logFileNames.IndexOf(fileName);
+            if (expeditionTerminalDefinition == null || stateReplicator == null || index == -1)
+                return;
+
+            bool[] currentBits = stateReplicator.State.Value;
+            bool[] bits = new bool[logFileNames.Count];
+            for (int i = 0; i < currentBits.Length && i < bits.Length; i++)
+            {
+                bits[i] = currentBits[i];
+            }
+
+            if (bits[index]) return; // log was already read
+            bits[index] = true;
+            stateReplicator.SetState(stateReplicator.State with { Value = bits });
         }
 
         private void OnStateChanged(TerminalState oldState, TerminalState newState, bool isRecall)
         {
-            if (!isRecall) return;
+            if (oldState.Enabled != newState.Enabled)
+            {
+                ChangeStateUnsynced(newState.Enabled);
+            }
 
-            ChangeStateUnsynced(newState.Enabled);
+            if (expeditionTerminalDefinition == null || isRecall) return;
+
+            if (!oldState.Approached && newState.Approached)
+            {
+                ExecuteEvents(expeditionTerminalDefinition.EventsOnApproach, 0f);
+            }
+
+            bool[] oldBits = oldState.Value;
+            bool[] bits = newState.Value;
+            for (int i = 0; i < logFileNames.Count; i++)
+            {
+                bool wasRead = i < oldBits.Length && oldBits[i];
+                bool isRead = i < bits.Length && bits[i];
+                if (wasRead || !isRead) continue;
+
+                if (logFileEvents.TryGetValue(logFileNames[i], out var events))
+                {
+                    ExecuteEvents(events, 3f); // wait for the logfile output to finish
+                }
+            }
+        }
+
+        private void ExecuteEvents(List<WardenObjectiveEventData> events, float delay)
+        {
+            if (events == null || events.Count == 0) return;
+
+            if (delay <= 0f)
+            {
+                WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(events.ToIl2Cpp(), eWardenObjectiveEventTrigger.None, true);
+                return;
+            }
+
+            CoroutineManager.StartCoroutine(DelayedEvents(events, delay).WrapToIl2Cpp());
+        }
+
+        private static IEnumerator DelayedEvents(List<WardenObjectiveEventData> events, float delay)
+        {
+            yield return new UnityEngine.WaitForSeconds(delay);
+            WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(events.ToIl2Cpp(), eWardenObjectiveEventTrigger.None, true);
+        }
+
+        private void SetupExpeditionDefinition()
+        {
+            if (!ExpeditionDefinitionManager.Current.TryGetTerminalDefinitionFromInstance(lgTerminal, out var def)) return;
+
+            expeditionTerminalDefinition = def;
+
+            foreach (var logFile in def.LogFiles)
+            {
+                if (string.IsNullOrWhiteSpace(logFile.FileName)) continue;
+
+                string fileName = logFile.FileName.ToUpperInvariant();
+                logFileEvents[fileName] = logFile.EventsOnFileRead;
+                logFileNames.Add(fileName);
+            }
         }
 
         public static TerminalWrapper Instantiate(LG_ComputerTerminal lgTerminal, uint replicatorID)
@@ -77,6 +182,7 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
             t.lgTerminal = lgTerminal;
             t.stateReplicator = StateReplicator<TerminalState>.Create(replicatorID, new() { Enabled = true }, LifeTimeType.Session);
             t.stateReplicator.OnStateChanged += t.OnStateChanged;
+            t.SetupExpeditionDefinition();
 
             return t;
         }
