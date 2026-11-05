@@ -16,6 +16,8 @@ namespace ExtraObjectiveSetup.BaseClasses.CustomTerminalDefinition
 
         public bool GeneratePassword { set; get; } = true;
 
+        public Tweaks.TerminalTweak.SerialGeneratorManager.CodeWordLength PasswordWordLength { set; get; } = Tweaks.TerminalTweak.SerialGeneratorManager.CodeWordLength.Four;
+
         public int PasswordPartCount { set; get; } = 1;
 
         public bool ShowPasswordLength { set; get; } = false;

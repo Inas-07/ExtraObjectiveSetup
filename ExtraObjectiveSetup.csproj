@@ -120,6 +120,8 @@
     <Compile Include="Tweaks\TerminalPosition\TerminalPositionOverrideManager.cs" />
     <Compile Include="Tweaks\TerminalTweak\TerminalState.cs" />
     <Compile Include="Tweaks\TerminalTweak\TerminalWrapper.cs" />
+    <Compile Include="Tweaks\TerminalTweak\SerialGeneratorManager.cs" />
+    <Compile Include="Tweaks\TerminalTweak\SerialGeneratorManager.CodeWords.cs" />
     <Compile Include="Utils\EOSTerminalUtils.Misc.cs" />
     <Compile Include="Utils\EOSTerminalUtils.Password.cs" />
     <Compile Include="Utils\EOSUtils.cs" />

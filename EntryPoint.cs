@@ -41,6 +41,7 @@ namespace ExtraObjectiveSetup
         private void SetupManagers()
         {
             BatchBuildManager.Current.Init();
+            Tweaks.TerminalTweak.SerialGeneratorManager.Init();
 
             Objectives.IndividualGenerator.IndividualGeneratorObjectiveManager.Current.Init();
             Objectives.GeneratorCluster.GeneratorClusterObjectiveManager.Current.Init();
