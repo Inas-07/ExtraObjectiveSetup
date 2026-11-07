@@ -4,6 +4,7 @@ using BepInEx.Unity.IL2CPP;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LevelGeneration;
 
 namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
 {
@@ -63,7 +64,25 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
 
         public static int GetUniqueSerialNo() => SerialGenerator.GetUniqueSerialNo();
 
+        public static string GetIPAddress(bool useIPv6)
+        {
+            if (_hasPluginConflict || !useIPv6)
+                return SerialGenerator.GetIpAddress();
 
+            string[] codes = new string[] { RandomHex(0x100, 0x1200), RandomHex(0x1000, 0xFFFF), RandomHex(0, 0x1FF), RandomHex(0, 0x3FFF) };
+            int num = codes.Length;
+            while (num > 1)
+            {
+                int num2 = _random.Next(0, num--);
+                (codes[num2], codes[num]) = (codes[num], codes[num2]);
+            }
+            return $"{RandomHex(0x2000, 0x3FFF)}::{string.Join(':', codes)}";
+        }
+
+        private static string RandomHex(int min, int max)
+        {
+            return _random.Next(min, max).ToString("x");
+        }
 
         public static string GetCodeWord(CodeWordLength wordLength)
         {
@@ -82,6 +101,15 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
             return hyphenate ? prefix.Insert(1, "-") : prefix;
         }
 
-
+        public static void RerollCorrectIndex(TerminalUplinkPuzzle uplinkPuzzle, int retryCount)
+        {
+            for (int i = 0; i < retryCount; i++)
+            {
+                foreach (var uplinkRound in uplinkPuzzle.m_rounds)
+                {
+                    uplinkRound.CorrectIndex = _random.Next(0, uplinkRound.Codes.Length);
+                }
+            }
+        }
     }
 }

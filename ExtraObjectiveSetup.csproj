@@ -86,6 +86,7 @@
     <Compile Include="Patches\Expedition\GearManager_LoadOfflineGearDatas.cs" />
     <Compile Include="Patches\Expedition\DisabelMap.cs" />
     <Compile Include="Patches\Expedition\RundownManager_SetActiveExpedition.cs" />
+    <Compile Include="Patches\Expedition\TerminalWrapper_ExpeditionPatches.cs" />
     <Compile Include="Patches\ChainedPuzzle\ChainedPuzzleInstance_OnStateChange.cs" />
     <Compile Include="Patches\HSUActivator\ChainedPuzzleInstance_OnPuzzleSolved.cs" />
     <Compile Include="Patches\HSUActivator\SetupFromCustomGeomorph.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="Patches\Uplink\TerminalUplinkSequenceOutput.cs" />
     <Compile Include="Patches\Uplink\TerminalUplinkVerify.cs" />
     <Compile Include="Patches\Uplink\UplinkGUI_Update.cs" />
+    <Compile Include="Patches\Uplink\UplinkPuzzleCodesString.cs" />
     <Compile Include="JSON\EOSJson.cs" />
     <Compile Include="Tweaks\BossEvents\EventsOnZoneBossDeath.cs" />
     <Compile Include="Tweaks\Scout\EventsOnZoneScoutScream.cs" />
