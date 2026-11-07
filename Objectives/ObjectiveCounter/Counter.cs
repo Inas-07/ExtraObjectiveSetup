@@ -43,15 +43,21 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
         {
             Def = def;
 
-            // MinCount / MaxCount (fork) and IsCapped (pre-fork EOS core) are mutually exclusive.
-            // The sentinel values are what EOSJson writes into Template.json, so they mean "not set".
-            bool minSet = def.MinCount != int.MinValue;
-            bool maxSet = def.MaxCount != int.MaxValue;
-            bool useMinMax = minSet || maxSet;
-            legacyCapping = !useMinMax && def.IsCapped;
+            // IsCapped (pre-fork EOS core) takes priority. If it is false, MinCount / MaxCount
+            // from the fork are applied unconditionally, including their sentinel values.
+            legacyCapping = def.IsCapped && def.OnReached.Count > 0;
 
-            if (useMinMax)
+            if (legacyCapping)
             {
+                minBound = def.OnReached.Min(x => x.Count);
+                maxBound = def.OnReached.Max(x => x.Count);
+            }
+            else
+            {
+                if (def.IsCapped)
+                {
+                    EOSLogger.Warning($"Counter: '{def.WorldEventObjectFilter}' IsCapped is set but OnReached is empty, using MinCount / MaxCount");
+                }
                 if (def.MinCount > def.MaxCount)
                 {
                     EOSLogger.Error($"Counter: '{def.WorldEventObjectFilter}' MinCount > MaxCount!");
@@ -60,23 +66,9 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 
                 minBound = def.MinCount;
                 maxBound = def.MaxCount;
-                if (def.IsCapped)
-                {
-                    EOSLogger.Warning($"Counter: '{def.WorldEventObjectFilter}' MinCount / MaxCount are set, IsCapped is ignored");
-                }
-            }
-            else if (legacyCapping && def.OnReached.Count > 0)
-            {
-                minBound = def.OnReached.Min(x => x.Count);
-                maxBound = def.OnReached.Max(x => x.Count);
-            }
-            else
-            {
-                minBound = int.MinValue;
-                maxBound = int.MaxValue;
             }
 
-            // Only explicit MinCount / MaxCount bound the starting count; pre-fork IsCapped never did,
+            // Only MinCount / MaxCount bound the starting count; pre-fork IsCapped never did,
             // so a legacy definition can start outside the OnReached range.
             CurrentCount = legacyCapping ? (int)def.StartingCount : Clamp(def.StartingCount);
             EOSLogger.Debug($"Counter: '{def.WorldEventObjectFilter}' starting count: {def.StartingCount}, as clamped: {CurrentCount}, bounds: [{minBound}, {maxBound}], legacyCapping: {legacyCapping}");

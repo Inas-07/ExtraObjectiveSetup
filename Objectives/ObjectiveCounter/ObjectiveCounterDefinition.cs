@@ -21,12 +21,10 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 
         // Kept for JSON compatibility with pre-fork definitions. The fork removed this field and
         // uses MinCount / MaxCount instead. The two capping mechanisms are mutually exclusive:
-        //   - MinCount != int.MinValue or MaxCount != int.MaxValue: the fork's MinCount / MaxCount
-        //     logic is used and IsCapped is ignored
-        //   - otherwise IsCapped == true: the counter is bounded to the min / max of OnReached,
-        //     matching pre-fork EOS core (Increment: upper only, Decrement: lower only,
-        //     Set / Jump: both, StartingCount: unbounded)
-        //   - otherwise: no bound
+        //   - IsCapped == true: the counter is bounded to the min / max of OnReached, matching
+        //     pre-fork EOS core (Increment: upper only, Decrement: lower only, Set / Jump: both,
+        //     StartingCount: unbounded). MinCount / MaxCount are ignored
+        //   - otherwise: MinCount / MaxCount are applied unconditionally (fork behaviour)
         //
         // TODO(review): the IsCapped branch has no equivalent in the fork. It keeps the fork's
         // Clamp / ReachTo / ExecuteOnce architecture, so event firing and Jump follow the fork.
