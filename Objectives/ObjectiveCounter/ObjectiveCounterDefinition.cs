@@ -19,18 +19,17 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 
         public int StartingCount { get; set; } = 0;
 
-        // The fork replaced IsCapped with MinCount / MaxCount and removed the field; this port keeps
-        // the field and still honours it, so definitions written for the old capping keep working.
-        // When true the counter is bounded to the min / max of OnReached (see Counter.minBound / maxBound).
+        // Kept for JSON compatibility with pre-fork definitions. The fork removed this field and
+        // uses MinCount / MaxCount instead. The two capping mechanisms are mutually exclusive:
+        //   - MinCount != int.MinValue or MaxCount != int.MaxValue: the fork's MinCount / MaxCount
+        //     logic is used and IsCapped is ignored
+        //   - otherwise IsCapped == true: the counter is bounded to the min / max of OnReached,
+        //     matching pre-fork EOS core (Increment: upper only, Decrement: lower only,
+        //     Set / Jump: both, StartingCount: unbounded)
+        //   - otherwise: no bound
         //
-        // TODO(review): three edges differ from the pre-fork behaviour, decide whether to keep them:
-        //   - JumpCounter (502) is new in the fork and is bounded by the IsCapped range as well; the old
-        //     code had no Jump, so there is no legacy behaviour to match
-        //   - IsCapped and MinCount / MaxCount may be set together; the tighter range wins, and a range
-        //     that does not overlap the OnReached range falls back to the OnReached range (error logged)
-        //   - when StartingCount lies outside the OnReached range, the first Increment / Decrement snaps
-        //     to the nearest edge of the range, so an OnReached entry at that edge fires at once; the old
-        //     code walked the count step by step and only fired what it actually passed
+        // TODO(review): the IsCapped branch has no equivalent in the fork. It keeps the fork's
+        // Clamp / ReachTo / ExecuteOnce architecture, so event firing and Jump follow the fork.
         public bool IsCapped { get; set; } = false;
 
         public int MinCount { get; set; } = int.MinValue;

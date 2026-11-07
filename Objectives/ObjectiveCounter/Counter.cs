@@ -31,45 +31,55 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
         public List<int> ExecuteOnceOverflow { get; private set; } = new();
         public StateReplicator<CounterStatus> Replicator { get; private set; }
 
+        private readonly bool legacyCapping;
         private readonly int minBound;
         private readonly int maxBound;
 
         private int Clamp(long count) => (int)Math.Clamp(count, minBound, maxBound);
+        private int ClampLower(long count) => (int)Math.Clamp(count, minBound, (long)int.MaxValue);
+        private int ClampUpper(long count) => (int)Math.Clamp(count, (long)int.MinValue, maxBound);
 
         public Counter(ObjectiveCounterDefinition def)
         {
-            if (def.MinCount > def.MaxCount)
-            {
-                EOSLogger.Error($"Counter: '{def.WorldEventObjectFilter}' MinCount > MaxCount!");
-                (def.MinCount, def.MaxCount) = (def.MaxCount, def.MinCount);
-            }
-
             Def = def;
 
-            minBound = def.MinCount;
-            maxBound = def.MaxCount;
+            // MinCount / MaxCount (fork) and IsCapped (pre-fork EOS core) are mutually exclusive.
+            // The sentinel values are what EOSJson writes into Template.json, so they mean "not set".
+            bool minSet = def.MinCount != int.MinValue;
+            bool maxSet = def.MaxCount != int.MaxValue;
+            bool useMinMax = minSet || maxSet;
+            legacyCapping = !useMinMax && def.IsCapped;
 
-            // IsCapped: bound the counter to the range covered by OnReached, as before MinCount / MaxCount
-            if (def.IsCapped && def.OnReached.Count > 0)
+            if (useMinMax)
             {
-                int cappedMin = def.OnReached.Min(x => x.Count);
-                int cappedMax = def.OnReached.Max(x => x.Count);
-
-                minBound = Math.Max(minBound, cappedMin);
-                maxBound = Math.Min(maxBound, cappedMax);
-
-                if (minBound > maxBound)
+                if (def.MinCount > def.MaxCount)
                 {
-                    EOSLogger.Error($"Counter: '{def.WorldEventObjectFilter}' IsCapped range [{cappedMin}, {cappedMax}] does not overlap MinCount / MaxCount, using the OnReached range");
-                    minBound = cappedMin;
-                    maxBound = cappedMax;
+                    EOSLogger.Error($"Counter: '{def.WorldEventObjectFilter}' MinCount > MaxCount!");
+                    (def.MinCount, def.MaxCount) = (def.MaxCount, def.MinCount);
+                }
+
+                minBound = def.MinCount;
+                maxBound = def.MaxCount;
+                if (def.IsCapped)
+                {
+                    EOSLogger.Warning($"Counter: '{def.WorldEventObjectFilter}' MinCount / MaxCount are set, IsCapped is ignored");
                 }
             }
+            else if (legacyCapping && def.OnReached.Count > 0)
+            {
+                minBound = def.OnReached.Min(x => x.Count);
+                maxBound = def.OnReached.Max(x => x.Count);
+            }
+            else
+            {
+                minBound = int.MinValue;
+                maxBound = int.MaxValue;
+            }
 
-            // only the explicit MinCount / MaxCount bound the starting count: with IsCapped the starting
-            // count may lie outside the OnReached range (the legacy code did not bound it either)
-            CurrentCount = (int)Math.Clamp(def.StartingCount, def.MinCount, def.MaxCount);
-            EOSLogger.Debug($"Counter: '{def.WorldEventObjectFilter}' starting count: {def.StartingCount}, as clamped: {CurrentCount}, bounds: [{minBound}, {maxBound}]");
+            // Only explicit MinCount / MaxCount bound the starting count; pre-fork IsCapped never did,
+            // so a legacy definition can start outside the OnReached range.
+            CurrentCount = legacyCapping ? (int)def.StartingCount : Clamp(def.StartingCount);
+            EOSLogger.Debug($"Counter: '{def.WorldEventObjectFilter}' starting count: {def.StartingCount}, as clamped: {CurrentCount}, bounds: [{minBound}, {maxBound}], legacyCapping: {legacyCapping}");
 
             uint allottedID = EOSNetworking.AllotReplicatorID();
             if (allottedID == EOSNetworking.INVALID_ID)
@@ -149,7 +159,7 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
         public void Increment(long by)
         {
             long prev = CurrentCount;
-            CurrentCount = Clamp(prev + by);
+            CurrentCount = legacyCapping ? ClampUpper(prev + by) : Clamp(prev + by);
             long num = CurrentCount != prev ? prev + 1 : CurrentCount;
             ReachTo(num, CurrentCount, true);
             Replicator?.SetStateUnsynced(new(CurrentCount, ExecuteOnce));
@@ -158,7 +168,7 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
         public void Decrement(long by)
         {
             long prev = CurrentCount;
-            CurrentCount = Clamp(prev - by);
+            CurrentCount = legacyCapping ? ClampLower(prev - by) : Clamp(prev - by);
             long num = CurrentCount != prev ? prev - 1 : CurrentCount;
             ReachTo(CurrentCount, num, false);
             Replicator?.SetStateUnsynced(new(CurrentCount, ExecuteOnce));
