@@ -11,6 +11,7 @@ using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.BaseClasses;
 using AmorLib.Networking.StateReplicators;
 using ExtraObjectiveSetup.Instances.ChainedPuzzle;
+using ExtraObjectiveSetup.Tweaks.TerminalTweak;
 using SNetwork;
 using UnityEngine;
 
@@ -236,7 +237,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
         private void SetupUplinkPuzzle(TerminalUplinkPuzzle uplinkPuzzle, LG_ComputerTerminal terminal, UplinkDefinition def)
         {
             uplinkPuzzle.m_rounds = new List<TerminalUplinkPuzzleRound>().ToIl2Cpp();
-            uplinkPuzzle.TerminalUplinkIP = SerialGenerator.GetIpAddress();
+            uplinkPuzzle.TerminalUplinkIP = SerialGeneratorManager.GetIPAddress(def.UseIPv6Addresses);
             uplinkPuzzle.m_roundIndex = 0;
             uplinkPuzzle.m_lastRoundIndexToUpdateGui = -1;
             uplinkPuzzle.m_position = terminal.transform.position;
@@ -245,7 +246,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
             uint verificationRound = Math.Max(def.NumberOfVerificationRounds, 1u);
             for (int i = 0; i < verificationRound; ++i)
             {
-                int candidateWords = 6;
+                int candidateWords = Math.Clamp(def.CandidateWordsCount, 6, 15);
                 TerminalUplinkPuzzleRound uplinkPuzzleRound = new TerminalUplinkPuzzleRound()
                 {
                     CorrectIndex = Builder.SessionSeedRandom.Range(0, candidateWords, "NO_TAG"),
@@ -255,8 +256,8 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 
                 for (int j = 0; j < candidateWords; ++j)
                 {
-                    uplinkPuzzleRound.Codes[j] = SerialGenerator.GetCodeWord();
-                    uplinkPuzzleRound.Prefixes[j] = SerialGenerator.GetCodeWordPrefix();
+                    uplinkPuzzleRound.Codes[j] = SerialGeneratorManager.GetCodeWord(def.CodeWordLength);
+                    uplinkPuzzleRound.Prefixes[j] = SerialGeneratorManager.GetCodeWordPrefix(def.UseHardCodeWordPrefixes, def.HyphenateCodeWordPrefixes);
                 }
 
                 uplinkPuzzle.m_rounds.Add(uplinkPuzzleRound);
@@ -284,6 +285,11 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
                         uplinkTerminal.UplinkPuzzle.Connected = false;
                         uplinkTerminal.UplinkPuzzle.Solved = false;
                         uplinkTerminal.UplinkPuzzle.m_roundIndex = 0;
+                        if (isRecall)
+                        {
+                            // the puzzle is regenerated on recall, so the index has to move with it
+                            SerialGeneratorManager.RerollCorrectIndex(uplinkTerminal.UplinkPuzzle, CheckpointManager.CheckpointUsage - oldState.RetryCount);
+                        }
                         break;
                     case UplinkStatus.InProgress:
                         uplinkTerminal.UplinkPuzzle.CurrentRound.ShowGui = true;
@@ -314,7 +320,7 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
 
             if(SNet.IsMaster)
             {
-                stateReplicators[terminal.Pointer].SetState(newState);
+                stateReplicators[terminal.Pointer].SetState(newState with { RetryCount = CheckpointManager.CheckpointUsage });
             }
         }
 
