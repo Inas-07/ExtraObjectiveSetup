@@ -1,6 +1,7 @@
 ﻿using BepInEx.Unity.IL2CPP.Utils.Collections;
 using ExtraObjectiveSetup.Utils;
 using GameData;
+using GTFO.API.Extensions;
 using Player;
 using System;
 using System.Collections.Generic;
@@ -69,6 +70,12 @@ namespace ExtraObjectiveSetup.ExtendedWardenEvents
         public bool HasEventDefinition(string eventName) => eventNames2ID.ContainsKey(eventName.ToLowerInvariant());
 
         public bool HasEventDefinition(uint eventID) => eventDefinition.ContainsKey(eventID);
+
+        /// <summary>
+        /// Runs a list of events through the vanilla dispatcher, so both vanilla and EOS event types are handled.
+        /// </summary>
+        public static void ExecuteWardenEvents(List<WardenObjectiveEventData> events, eWardenObjectiveEventTrigger trigger = eWardenObjectiveEventTrigger.None, bool ignoreTrigger = true)
+            => WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(events.ToIl2Cpp(), trigger, ignoreTrigger);
 
         private System.Collections.IEnumerator Handle(WardenObjectiveEventData e, float currentDuration)
         {

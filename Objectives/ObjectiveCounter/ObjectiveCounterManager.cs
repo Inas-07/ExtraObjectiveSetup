@@ -15,6 +15,8 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 
         private Dictionary<string, Counter> Counters { get; } = new();
 
+        public IReadOnlyDictionary<string, Counter> AllCounters => Counters;
+
         protected override string DEFINITION_NAME => "ObjectiveCounter";
 
         private void Build(ObjectiveCounterDefinition def)
@@ -26,12 +28,6 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
             }
 
             var counter = new Counter(def);
-            if(!counter.TrySetupReplicator())
-            {
-                EOSLogger.Error($"Build Counter: counter '{def.WorldEventObjectFilter}' failed to setup state replicator! What's going wrong?");
-                return;
-            }
-
             Counters[def.WorldEventObjectFilter] = counter;
             EOSLogger.Debug($"Build Counter: counter '{def.WorldEventObjectFilter}' setup completed");
         }
@@ -73,7 +69,7 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 			}
 
             var counter = Counters[worldEventObjectFilter];
-            counter.SetTo(to);
+            counter.Set(to);
 		}
 
         private void SetCounter(WardenObjectiveEventData e)
@@ -83,6 +79,24 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 			SetCounter(worldEventObjectFilter, to);
 		}
 
+        private void JumpCounter(string worldEventObjectFilter, int by)
+        {
+            if (!Counters.ContainsKey(worldEventObjectFilter))
+            {
+                EOSLogger.Error($"JumpCounter: {worldEventObjectFilter} is not defined");
+                return;
+            }
+
+            if (by == 0) return;
+
+            Counters[worldEventObjectFilter].Jump(by);
+        }
+
+        private void JumpCounter(WardenObjectiveEventData e)
+        {
+            JumpCounter(e.WorldEventObjectFilter, e.Count);
+        }
+
         private void BuildCounters()
         {
             if (!definitions.ContainsKey(CurrentMainLevelLayout)) return;
@@ -91,6 +105,7 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 
         private void Clear()
         {
+            Counters.Values.ToList().ForEach(counter => counter.Replicator?.Unload());
             Counters.Clear();
         }
 
@@ -101,6 +116,7 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
             LevelAPI.OnBuildDone += BuildCounters;
             EOSWardenEventManager.Current.AddEventDefinition(CounterWardenEvent.ChangeCounter.ToString(), (uint)CounterWardenEvent.ChangeCounter, ChangeCounter);
 			EOSWardenEventManager.Current.AddEventDefinition(CounterWardenEvent.SetCounter.ToString(), (uint)CounterWardenEvent.SetCounter, SetCounter);
+            EOSWardenEventManager.Current.AddEventDefinition(CounterWardenEvent.JumpCounter.ToString(), (uint)CounterWardenEvent.JumpCounter, JumpCounter);
 
 		}
 
