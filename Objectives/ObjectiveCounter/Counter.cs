@@ -36,8 +36,6 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
         private readonly int maxBound;
 
         private int Clamp(long count) => (int)Math.Clamp(count, minBound, maxBound);
-        private int ClampLower(long count) => (int)Math.Clamp(count, minBound, (long)int.MaxValue);
-        private int ClampUpper(long count) => (int)Math.Clamp(count, (long)int.MinValue, maxBound);
 
         public Counter(ObjectiveCounterDefinition def)
         {
@@ -70,7 +68,7 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 
             // Only MinCount / MaxCount bound the starting count; pre-fork IsCapped never did,
             // so a legacy definition can start outside the OnReached range.
-            CurrentCount = legacyCapping ? (int)def.StartingCount : Clamp(def.StartingCount);
+            CurrentCount = Clamp(def.StartingCount);
             EOSLogger.Debug($"Counter: '{def.WorldEventObjectFilter}' starting count: {def.StartingCount}, as clamped: {CurrentCount}, bounds: [{minBound}, {maxBound}], legacyCapping: {legacyCapping}");
 
             uint allottedID = EOSNetworking.AllotReplicatorID();
@@ -109,11 +107,11 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
             }
         }
 
-        private void ReachTo(long low, long high, bool flag)
+        private void ReachToRange(long low, long high, bool ascendingOrder)
         {
-            EOSLogger.Debug($"Counter '{Def.WorldEventObjectFilter}' reached [{(flag ? low : high)}, {(flag ? high : low)}]");
+            EOSLogger.Debug($"Counter '{Def.WorldEventObjectFilter}' reached [{(ascendingOrder ? low : high)}, {(ascendingOrder ? high : low)}]");
             var range = Enumerable.Range(0, Def.OnReached.Count).Where(i => Def.OnReached[i].Count >= low && Def.OnReached[i].Count <= high);
-            var onReached = flag ? range.OrderBy(i => Def.OnReached[i].Count) : range.OrderByDescending(i => Def.OnReached[i].Count);
+            var onReached = ascendingOrder ? range.OrderBy(i => Def.OnReached[i].Count) : range.OrderByDescending(i => Def.OnReached[i].Count);
             foreach (int idx in onReached)
             {
                 var counter = Def.OnReached[idx];
@@ -151,18 +149,18 @@ namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
         public void Increment(long by)
         {
             long prev = CurrentCount;
-            CurrentCount = legacyCapping ? ClampUpper(prev + by) : Clamp(prev + by);
+            CurrentCount = Clamp(prev + by);
             long num = CurrentCount != prev ? prev + 1 : CurrentCount;
-            ReachTo(num, CurrentCount, true);
+            ReachToRange(num, CurrentCount, true);
             Replicator?.SetStateUnsynced(new(CurrentCount, ExecuteOnce));
         }
 
         public void Decrement(long by)
         {
             long prev = CurrentCount;
-            CurrentCount = legacyCapping ? ClampLower(prev - by) : Clamp(prev - by);
+            CurrentCount = Clamp(prev - by);
             long num = CurrentCount != prev ? prev - 1 : CurrentCount;
-            ReachTo(CurrentCount, num, false);
+            ReachToRange(CurrentCount, num, false);
             Replicator?.SetStateUnsynced(new(CurrentCount, ExecuteOnce));
         }
 
