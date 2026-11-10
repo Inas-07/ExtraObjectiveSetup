@@ -1,20 +1,18 @@
 ﻿using BepInEx;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
-using ExtraObjectiveSetup.JSON;
+using AmorLib.Dependencies;
 using ExtraObjectiveSetup.Expedition;
 using ExtraObjectiveSetup.Expedition.Gears;
 using ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup;
-using ExtraObjectiveSetup.JSON.MTFOPartialData;
 
 namespace ExtraObjectiveSetup
 {
     [BepInDependency("dev.gtfomodding.gtfo-api", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("Amor.AmorLib", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency(MTFOUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency(MTFOPartialDataUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(InjectLibUtil.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("GTFO.AWO", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("com.dak.MTFO", BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(PartialData_Wrapper.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(InjectLib_Wrapper.PLUGIN_GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.sinai.unityexplorer", BepInDependency.DependencyFlags.SoftDependency)] // try prevent CTD
     [BepInPlugin(AUTHOR + "." + PLUGIN_NAME, PLUGIN_NAME, VERSION)]
     [BepInIncompatibility("Amor.ExcellentObjectiveSetup")]

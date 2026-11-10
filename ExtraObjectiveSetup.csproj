@@ -58,10 +58,7 @@
     <Compile Include="JSON\Extensions\RecursiveEnumerableExtensions.cs" />
     <Compile Include="JSON\InjectLibUtil.cs" />
     <Compile Include="JSON\PData\MTFOPartialDataUtil.cs" />
-    <Compile Include="JSON\MTFOUtil.cs" />
     <Compile Include="JSON\MyVector3Converter.cs" />
-    <Compile Include="JSON\PData\PDataGUID.cs" />
-    <Compile Include="JSON\WritableLocalizedTextConverter.cs" />
     <Compile Include="Objectives\ActivateSmallHSU\HSUActivatorDefinition.cs" />
     <Compile Include="BaseClasses\InstanceDefinitionManager.cs" />
     <Compile Include="Objectives\ActivateSmallHSU\HSUActivatorObjectiveManager.cs" />
