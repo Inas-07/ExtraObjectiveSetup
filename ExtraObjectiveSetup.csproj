@@ -126,6 +126,7 @@
     <Compile Include="Utils\EOSTerminalUtils.Password.cs" />
     <Compile Include="Utils\EOSUtils.cs" />
     <Compile Include="Utils\EOSTerminalUtils.UniqueCommands.cs" />
+    <Compile Include="Utils\TSL_Wrapper.cs" />
     <Compile Include="Utils\Color.cs" />
     <Compile Include="Utils\VanillaTMPPros.cs" />
     <Compile Include="Utils\Vec4.cs" />
