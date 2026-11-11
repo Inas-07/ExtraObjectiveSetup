@@ -13,7 +13,7 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalPosition
 
         public bool HideCover { get; set; } = false;
 
-        public bool ReassignSpawnNode { get; set; } = true;
+        public bool ReassignSpawnNode { get; set; } = false;
 
     }
 }
