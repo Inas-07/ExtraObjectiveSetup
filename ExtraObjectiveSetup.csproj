@@ -132,6 +132,7 @@
     <Compile Include="Utils\Vec4.cs" />
     <Compile Include="Utils\Vec3.cs" />
     <Compile Include="Utils\EOSLogger.cs" />
+    <Compile Include="Utils\LocalPlayer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies.props" />

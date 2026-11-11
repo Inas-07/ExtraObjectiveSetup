@@ -5,6 +5,7 @@ using AmorLib.Dependencies;
 using ExtraObjectiveSetup.Expedition;
 using ExtraObjectiveSetup.Expedition.Gears;
 using ExtraObjectiveSetup.Expedition.IndividualGeneratorGroup;
+using ExtraObjectiveSetup.Utils;
 
 namespace ExtraObjectiveSetup
 {
@@ -37,6 +38,7 @@ namespace ExtraObjectiveSetup
         /// </summary>
         private void SetupManagers()
         {
+            LocalPlayer.Init();
             BatchBuildManager.Current.Init();
             Tweaks.TerminalTweak.SerialGeneratorManager.Init();
 
