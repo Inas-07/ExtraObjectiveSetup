@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LevelGeneration;
+using GTFO.API;
 
 namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
 {
@@ -51,7 +52,7 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
                 EOSLogger.Warning($"Conflicting plugin: \"{AUTOGEN_GUID}\" and/or \"{LONGERCODES_GUID}\". Using default SerialGenerator settings");
         }
 
-        public static void Init()
+        private static void OnBuildStart()
         {
             _random = RandomUtil.CreateSessionRandom("EOS_SerialGenerator");
             _codeWords.Clear();
@@ -60,6 +61,11 @@ namespace ExtraObjectiveSetup.Tweaks.TerminalTweak
             _codeWords[CodeWordLength.Six] = new(SixLetterWords);
             _codeWords[CodeWordLength.Seven] = new(SevenLetterWords);
             _hardPrefixes = new(HardCodeWordPrefixes);
+        }
+
+        public static void Init()
+        {
+            LevelAPI.OnBuildStart += OnBuildStart;
         }
 
         public static int GetUniqueSerialNo() => SerialGenerator.GetUniqueSerialNo();
