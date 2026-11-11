@@ -1,120 +1,182 @@
-﻿using System;
+﻿using AmorLib.Networking.StateReplicators;
+using ExtraObjectiveSetup.ExtendedWardenEvents;
+using ExtraObjectiveSetup.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using ExtraObjectiveSetup.Utils;
-using FloLib.Networks.Replications;
-using GTFO.API.Extensions;
-using SNetwork;
 
 namespace ExtraObjectiveSetup.Objectives.ObjectiveCounter
 {
-    public struct CounterStatus
+    public unsafe struct CounterStatus
     {
-        public int Count = 0;
+        public int count;
 
-        public CounterStatus() { }
+        public fixed ulong executeOnce[16];
+
+        public CounterStatus(int count, ulong[] executeOnce)
+        {
+            this.count = count;
+            fixed (ulong* dst = this.executeOnce)
+            {
+                executeOnce.AsSpan(0, 16).CopyTo(new Span<ulong>(dst, 16));
+            }
+        }
     }
 
     public class Counter
     {
-        public ObjectiveCounterDefinition def { get; private set; }
+        public ObjectiveCounterDefinition Def { get; private set; }
+        public int CurrentCount { get; private set; } = 0;
+        public ulong[] ExecuteOnce { get; private set; } = new ulong[16];
+        public List<int> ExecuteOnceOverflow { get; private set; } = new();
+        public StateReplicator<CounterStatus> Replicator { get; private set; }
 
-        public string WorldEventObjectFilter => def.WorldEventObjectFilter;
+        private readonly bool legacyCapping;
+        private readonly int minBound;
+        private readonly int maxBound;
 
-        public int CurrentCount => StateReplicator?.State.Count ?? 0;
+        private int Clamp(long count) => (int)Math.Clamp(count, minBound, maxBound);
 
-        public StateReplicator<CounterStatus> StateReplicator { get; private set; }
-
-        private void OnStateChanged(CounterStatus oldStatus, CounterStatus newStatus, bool isRecall)
+        public Counter(ObjectiveCounterDefinition def)
         {
-            // currently have nothing to do here
+            Def = def;
+
+            // IsCapped (pre-fork EOS core) takes priority. If it is false, MinCount / MaxCount
+            // from the fork are applied unconditionally, including their sentinel values.
+            legacyCapping = def.IsCapped && def.OnReached.Count > 0;
+
+            if (legacyCapping)
+            {
+                minBound = def.OnReached.Min(x => x.Count);
+                maxBound = def.OnReached.Max(x => x.Count);
+            }
+            else
+            {
+                if (def.IsCapped)
+                {
+                    EOSLogger.Warning($"Counter: '{def.WorldEventObjectFilter}' IsCapped is set but OnReached is empty, using MinCount / MaxCount");
+                }
+                if (def.MinCount > def.MaxCount)
+                {
+                    EOSLogger.Error($"Counter: '{def.WorldEventObjectFilter}' MinCount > MaxCount!");
+                    (def.MinCount, def.MaxCount) = (def.MaxCount, def.MinCount);
+                }
+
+                minBound = def.MinCount;
+                maxBound = def.MaxCount;
+            }
+
+            // Only MinCount / MaxCount bound the starting count; pre-fork IsCapped never did,
+            // so a legacy definition can start outside the OnReached range.
+            CurrentCount = Clamp(def.StartingCount);
+            EOSLogger.Debug($"Counter: '{def.WorldEventObjectFilter}' starting count: {def.StartingCount}, as clamped: {CurrentCount}, bounds: [{minBound}, {maxBound}], legacyCapping: {legacyCapping}");
+
+            uint allottedID = EOSNetworking.AllotReplicatorID();
+            if (allottedID == EOSNetworking.INVALID_ID)
+            {
+                EOSLogger.Error("Counter: replicator IDs depleted, cannot setup StateReplicator");
+                return;
+            }
+            Replicator = StateReplicator<CounterStatus>.Create(allottedID, new() { count = CurrentCount }, LifeTimeType.Session);
+            Replicator!.OnStateChanged += OnStateChanged;
+        }
+
+        private void OnStateChanged(CounterStatus _, CounterStatus state, bool isRecall)
+        {
+            EOSLogger.Debug($"Counter: '{Def.WorldEventObjectFilter}' OnStateChanged new count: {state.count}, isRecall: {isRecall}");
+            CurrentCount = state.count;
+            unsafe
+            {
+                ulong* src = state.executeOnce;
+                for (int i = 0; i < ExecuteOnce.Length; i++)
+                {
+                    ExecuteOnce[i] = src[i];
+                }
+            }
         }
 
         private void ReachTo(int count)
         {
-            def.OnReached
-                .FindAll(Counter => Counter.Count == count)
-                .ForEach(Counter =>
-                WardenObjectiveManager.CheckAndExecuteEventsOnTrigger(Counter.EventsOnReached.ToIl2Cpp(), GameData.eWardenObjectiveEventTrigger.None, true));
-
-            EOSLogger.Debug($"Counter '{WorldEventObjectFilter}' reached to {count}");
+            EOSLogger.Debug($"Counter '{Def.WorldEventObjectFilter}' reached {count}");
+            for (int idx = 0; idx < Def.OnReached.Count; idx++)
+            {
+                var counter = Def.OnReached[idx];
+                if (counter.Count != count || (counter.ExecuteOnce && HasExecuted(idx)))
+                    continue;
+                EOSWardenEventManager.ExecuteWardenEvents(counter.EventsOnReached);
+            }
         }
 
-        public void Increment(int by)
+        private void ReachToRange(long low, long high, bool ascendingOrder)
         {
-            if (by <= 0) return;
-
-            int target = CurrentCount + by;
-
-            if (def.IsCapped)
+            EOSLogger.Debug($"Counter '{Def.WorldEventObjectFilter}' reached [{(ascendingOrder ? low : high)}, {(ascendingOrder ? high : low)}]");
+            var range = Enumerable.Range(0, Def.OnReached.Count).Where(i => Def.OnReached[i].Count >= low && Def.OnReached[i].Count <= high);
+            var onReached = ascendingOrder ? range.OrderBy(i => Def.OnReached[i].Count) : range.OrderByDescending(i => Def.OnReached[i].Count);
+            foreach (int idx in onReached)
             {
-                int upperLimit = def.OnReached.Max(x => x.Count);
-                if (target > upperLimit)
-				{
-					target = upperLimit;
-                	EOSLogger.Warning($"ChangeCounter: Count upper limit reached. Setting current count to {target}.");
-				}
-			}
+                var counter = Def.OnReached[idx];
+                if (counter.ExecuteOnce && HasExecuted(idx))
+                    continue;
+                EOSWardenEventManager.ExecuteWardenEvents(counter.EventsOnReached);
+            }
+        }
 
-            for(int count = CurrentCount + 1; count <= target; count++)
+        private unsafe bool HasExecuted(int index)
+        {
+            if (index >= 1024)
             {
-                ReachTo(count);
+                if (!ExecuteOnceOverflow.Contains(index))
+                {
+                    ExecuteOnceOverflow.Add(index);
+                    EOSLogger.Warning($"Counter '{Def.WorldEventObjectFilter}' ExecuteOnce index at {index} > 1024, will not sync on recall");
+                    return false;
+                }
+                return true;
             }
 
-            StateReplicator.SetStateUnsynced(new() { Count = target });
-        }
+            int word = index >> 6;
+            int bit = index & 63;
+            bool result = false;
 
-        public void Decrement(int by)
-        {
-            if (by <= 0) return;
-
-            int target = CurrentCount - by;
-
-			if (def.IsCapped)
-			{
-				int lowerLimit = def.OnReached.Min(x => x.Count);
-				if (target < lowerLimit)
-				{
-					target = lowerLimit;
-					EOSLogger.Warning($"ChangeCounter: Count lower limit reached. Setting current count to {target}.");
-				}
-			}
-			
-            for (int count = CurrentCount - 1; count >= target; count--)
+            fixed (ulong* mask = ExecuteOnce)
             {
-                ReachTo(count);
+                result = (mask[word] & (1UL << bit)) != 0;
+                if (!result) mask[word] |= 1UL << bit;
             }
-
-            StateReplicator.SetStateUnsynced(new() { Count = target });
+            return result;
         }
 
-        public void SetTo(int to)
+        public void Increment(long by)
         {
-            if (def.IsCapped)
-            {
-				int upperLimit = def.OnReached.Max(x => x.Count);
-				int lowerLimit = def.OnReached.Min(x => x.Count);
-
-				to = Math.Clamp(to, lowerLimit, upperLimit);
-			}
-
-            ReachTo(to);
-			StateReplicator.SetStateUnsynced(new() { Count = to });
-		}
-
-        internal bool TrySetupReplicator()
-        {
-            uint id = EOSNetworking.AllotReplicatorID();
-            if(id == EOSNetworking.INVALID_ID) return false;
-
-            StateReplicator = StateReplicator<CounterStatus>.Create(id, new() { Count = def.StartingCount }, LifeTimeType.Level);
-            StateReplicator.OnStateChanged += OnStateChanged;
-            return true;
+            long prev = CurrentCount;
+            CurrentCount = Clamp(prev + by);
+            long num = CurrentCount != prev ? prev + 1 : CurrentCount;
+            ReachToRange(num, CurrentCount, true);
+            Replicator?.SetStateUnsynced(new(CurrentCount, ExecuteOnce));
         }
 
-        public Counter(ObjectiveCounterDefinition def) 
+        public void Decrement(long by)
         {
-            this.def = def;
+            long prev = CurrentCount;
+            CurrentCount = Clamp(prev - by);
+            long num = CurrentCount != prev ? prev - 1 : CurrentCount;
+            ReachToRange(CurrentCount, num, false);
+            Replicator?.SetStateUnsynced(new(CurrentCount, ExecuteOnce));
+        }
+
+        public void Set(long num)
+        {
+            CurrentCount = Clamp(num);
+            ReachTo(CurrentCount);
+            Replicator?.SetStateUnsynced(new(CurrentCount, ExecuteOnce));
+        }
+
+        public void Jump(long num)
+        {
+            long prev = CurrentCount;
+            CurrentCount = Clamp(prev + num);
+            ReachTo(CurrentCount);
+            Replicator?.SetStateUnsynced(new(CurrentCount, ExecuteOnce));
         }
     }
 }

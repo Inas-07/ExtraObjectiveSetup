@@ -67,7 +67,7 @@ namespace ExtraObjectiveSetup.Utils
                 EOSLogger.Error($"Tried to generate a password for terminal {terminal.PublicName} with no {typeof(TerminalZoneSelectionData).Name}!! This is not allowed.");
                 return;
             }
-            string codeWord = SerialGenerator.GetCodeWord();
+            string codeWord = Tweaks.TerminalTweak.SerialGeneratorManager.GetCodeWord(data.PasswordWordLength);
             string hintText = data.PasswordHintText;
             string logPositionText = "<b>[Forgot your password?]</b> Backup security key(s) located in logs on ";
             int passwordPartCount = data.PasswordPartCount;

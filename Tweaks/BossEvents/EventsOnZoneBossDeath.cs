@@ -1,4 +1,4 @@
-﻿using FloLib.Networks.Replications;
+﻿using AmorLib.Networking.StateReplicators;
 using GameData;
 using InControl.NativeProfile;
 using System.Collections.Generic;
@@ -51,7 +51,7 @@ namespace ExtraObjectiveSetup.Tweaks.BossEvents
                 return; // state replicator is not required
             }
 
-            FiniteBDEStateReplicator = StateReplicator<FiniteBDEState>.Create(replicatorID, new() { ApplyToHibernateCount = ApplyToHibernateCount, ApplyToWaveCount = ApplyToWaveCount }, LifeTimeType.Level);
+            FiniteBDEStateReplicator = StateReplicator<FiniteBDEState>.Create(replicatorID, new() { ApplyToHibernateCount = ApplyToHibernateCount, ApplyToWaveCount = ApplyToWaveCount }, LifeTimeType.Session);
             FiniteBDEStateReplicator.OnStateChanged += OnStateChanged;
         }
 

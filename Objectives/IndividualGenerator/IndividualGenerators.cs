@@ -14,5 +14,12 @@ namespace ExtraObjectiveSetup.Objectives.IndividualGenerator
         public Vec3 Position { get; set; } = new();
 
         public Vec3 Rotation { get; set; } = new();
+
+        public bool RepositionCover { get; set; } = false;
+
+        public bool HideCover { get; set; } = false;
+
+        public bool ReassignSpawnNode { get; set; } = true;
+
     }
 }

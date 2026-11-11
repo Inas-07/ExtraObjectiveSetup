@@ -4,8 +4,10 @@ using GTFO.API.Utilities;
 using System.Collections.Generic;
 using MTFO.API;
 using ExtraObjectiveSetup.Utils;
+using ExtraObjectiveSetup.Instances;
 using ExtraObjectiveSetup.JSON;
 using GTFO.API;
+using LevelGeneration;
 
 namespace ExtraObjectiveSetup.Expedition
 {
@@ -46,6 +48,21 @@ namespace ExtraObjectiveSetup.Expedition
         }
 
         public ExpeditionDefinition GetDefinition(uint MainLevelLayout) => definitions.ContainsKey(MainLevelLayout) ? definitions[MainLevelLayout] : null;
+
+        /// <summary>
+        /// Finds the terminal definition whose global zone index matches the zone the terminal is in.
+        /// </summary>
+        public bool TryGetTerminalDefinitionFromInstance(LG_ComputerTerminal terminal, out ExpeditionTerminalsDefinition termDef)
+        {
+            termDef = null;
+            if (terminal == null || !definitions.TryGetValue(CurrentMainLevelLayout, out var def)) return false;
+            if (terminal.SpawnNode == null && terminal.ConnectedReactor == null) return false;
+
+            var (dim, layer, zone) = TerminalInstanceManager.Current.GetGlobalZoneIndex(terminal);
+            termDef = def.Terminals.Find(t => t.DimensionIndex == dim && t.LayerType == layer && t.LocalIndex == zone);
+
+            return termDef != null;
+        }
 
         public void Init() { }
 

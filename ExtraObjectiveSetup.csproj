@@ -58,10 +58,7 @@
     <Compile Include="JSON\Extensions\RecursiveEnumerableExtensions.cs" />
     <Compile Include="JSON\InjectLibUtil.cs" />
     <Compile Include="JSON\PData\MTFOPartialDataUtil.cs" />
-    <Compile Include="JSON\MTFOUtil.cs" />
     <Compile Include="JSON\MyVector3Converter.cs" />
-    <Compile Include="JSON\PData\PDataGUID.cs" />
-    <Compile Include="JSON\WritableLocalizedTextConverter.cs" />
     <Compile Include="Objectives\ActivateSmallHSU\HSUActivatorDefinition.cs" />
     <Compile Include="BaseClasses\InstanceDefinitionManager.cs" />
     <Compile Include="Objectives\ActivateSmallHSU\HSUActivatorObjectiveManager.cs" />
@@ -86,6 +83,7 @@
     <Compile Include="Patches\Expedition\GearManager_LoadOfflineGearDatas.cs" />
     <Compile Include="Patches\Expedition\DisabelMap.cs" />
     <Compile Include="Patches\Expedition\RundownManager_SetActiveExpedition.cs" />
+    <Compile Include="Patches\Expedition\TerminalWrapper_ExpeditionPatches.cs" />
     <Compile Include="Patches\ChainedPuzzle\ChainedPuzzleInstance_OnStateChange.cs" />
     <Compile Include="Patches\HSUActivator\ChainedPuzzleInstance_OnPuzzleSolved.cs" />
     <Compile Include="Patches\HSUActivator\SetupFromCustomGeomorph.cs" />
@@ -96,6 +94,7 @@
     <Compile Include="Patches\Patch_EventsOnZoneScoutScream.cs" />
     <Compile Include="Patches\LGFactory\Patch_LG_Factory_Setup.cs" />
     <Compile Include="Patches\Patch_OnRecallDone.cs" />
+    <Compile Include="Patches\Patch_PlayerDownedCounter.cs" />
     <Compile Include="Patches\Terminal\Patch_FixHiddenCommandExecution.cs" />
     <Compile Include="Patches\Terminal\Patch_FixReactorTerminalNullSpawnNode.cs" />
     <Compile Include="Patches\Terminal\Patch_FixRepeatablePuzzleBugs.cs" />
@@ -111,6 +110,7 @@
     <Compile Include="Patches\Uplink\TerminalUplinkSequenceOutput.cs" />
     <Compile Include="Patches\Uplink\TerminalUplinkVerify.cs" />
     <Compile Include="Patches\Uplink\UplinkGUI_Update.cs" />
+    <Compile Include="Patches\Uplink\UplinkPuzzleCodesString.cs" />
     <Compile Include="JSON\EOSJson.cs" />
     <Compile Include="Tweaks\BossEvents\EventsOnZoneBossDeath.cs" />
     <Compile Include="Tweaks\Scout\EventsOnZoneScoutScream.cs" />
@@ -120,15 +120,19 @@
     <Compile Include="Tweaks\TerminalPosition\TerminalPositionOverrideManager.cs" />
     <Compile Include="Tweaks\TerminalTweak\TerminalState.cs" />
     <Compile Include="Tweaks\TerminalTweak\TerminalWrapper.cs" />
+    <Compile Include="Tweaks\TerminalTweak\SerialGeneratorManager.cs" />
+    <Compile Include="Tweaks\TerminalTweak\SerialGeneratorManager.CodeWords.cs" />
     <Compile Include="Utils\EOSTerminalUtils.Misc.cs" />
     <Compile Include="Utils\EOSTerminalUtils.Password.cs" />
     <Compile Include="Utils\EOSUtils.cs" />
     <Compile Include="Utils\EOSTerminalUtils.UniqueCommands.cs" />
+    <Compile Include="Utils\TSL_Wrapper.cs" />
     <Compile Include="Utils\Color.cs" />
     <Compile Include="Utils\VanillaTMPPros.cs" />
     <Compile Include="Utils\Vec4.cs" />
     <Compile Include="Utils\Vec3.cs" />
     <Compile Include="Utils\EOSLogger.cs" />
+    <Compile Include="Utils\LocalPlayer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Dependencies.props" />

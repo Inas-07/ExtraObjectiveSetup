@@ -40,14 +40,10 @@ namespace ExtraObjectiveSetup.Patches.PowerGenerator
             if (def == null) return;
 
             var position = def.Position.ToVector3();
-            var rotation = def.Rotation.ToQuaternion();
 
             if (position != UnityEngine.Vector3.zero)
             {
-                __instance.transform.position = position;
-                __instance.transform.rotation = rotation;
-
-                __instance.m_sound.UpdatePosition(position);
+                IndividualGeneratorObjectiveManager.ApplyDefinition(__instance, def);
 
                 EOSLogger.Debug($"LG_PowerGenerator_Core: modified position / rotation");
             }

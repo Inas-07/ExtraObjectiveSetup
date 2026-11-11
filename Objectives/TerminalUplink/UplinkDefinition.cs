@@ -1,5 +1,6 @@
 ﻿using ChainedPuzzles;
 using ExtraObjectiveSetup.BaseClasses;
+using ExtraObjectiveSetup.Tweaks.TerminalTweak;
 using GameData;
 using LevelGeneration;
 using System.Collections.Generic;
@@ -71,6 +72,19 @@ namespace ExtraObjectiveSetup.Objectives.TerminalUplink
         public bool UseUplinkAddress { get; set; } = true;
 
         public Terminal UplinkAddressLogPosition { get; set; } = new();
+
+        public bool UseIPv6Addresses { get; set; } = false;
+
+        public bool HyphenateCodeWordPrefixes { get; set; } = false;
+
+        // typo in the original field name, kept so existing definitions still load
+        public bool HyphanateCodeWordPrefixes { private get => HyphenateCodeWordPrefixes; set => HyphenateCodeWordPrefixes = value; }
+
+        public bool UseHardCodeWordPrefixes { get; set; } = false;
+
+        public SerialGeneratorManager.CodeWordLength CodeWordLength { get; set; } = SerialGeneratorManager.CodeWordLength.Four;
+
+        public int CandidateWordsCount { get; set; } = 6;
 
         public uint ChainedPuzzleToStartUplink { set; get; } = 0u;
 
