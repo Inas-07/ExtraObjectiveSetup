@@ -1,7 +1,8 @@
-﻿using GameData;
+﻿using AmorLib.Utils.JsonElementConverters;
+using ExtraObjectiveSetup.Utils;
+using GameData;
 using GTFO.API.Extensions;
 using LevelGeneration;
-using Localization;
 using System.Collections.Generic;
 
 namespace ExtraObjectiveSetup.BaseClasses.CustomTerminalDefinition
@@ -10,9 +11,9 @@ namespace ExtraObjectiveSetup.BaseClasses.CustomTerminalDefinition
     {
         public string Command { set; get; } = string.Empty;
 
-        public LocalizedText CommandDesc { set; get; } = null;
+        public LocaleText CommandDesc { set; get; } = LocaleText.Empty;
 
-        public List<TerminalOutput> PostCommandOutputs { set; get; } = new();
+        public List<LocaleTerminalOutput> PostCommandOutputs { set; get; } = new();
 
         public List<WardenObjectiveEventData> CommandEvents { set; get; } = new();
 
@@ -22,11 +23,28 @@ namespace ExtraObjectiveSetup.BaseClasses.CustomTerminalDefinition
         {
             return new() { 
                 Command = Command,
-                CommandDesc = CommandDesc,
+                CommandDesc = CommandDesc.ParseToLocalizedText(),
                 CommandEvents = CommandEvents.ToIl2Cpp(), 
-                PostCommandOutputs = PostCommandOutputs.ToIl2Cpp(),
+                PostCommandOutputs = PostCommandOutputs.ConvertAll(x => x.ToTerminalOutput()).ToIl2Cpp(),
                 SpecialCommandRule = SpecialCommandRule,
             };
+        }
+
+        public struct LocaleTerminalOutput
+        {
+            public TerminalLineType LineType { get; set; }
+            public LocaleText Output { get; set; }
+            public float Time { get; set; }
+
+            public readonly TerminalOutput ToTerminalOutput()
+            {
+                return new()
+                {
+                    LineType = LineType,
+                    Output = Output.ParseToLocalizedText(),
+                    Time = Time,
+                };
+            }
         }
     }
 }
